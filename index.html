@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Firstbase — Global SLO Performance</title>
+
+<!-- Page metadata -->
+<meta name="description" content="Live Firstbase service-level performance across North America, LATAM, Europe, Asia-Pacific, and the Middle East — Click-to-Home, Dock-to-Stock, and Click-to-Ship SLOs by region, from the live SLO tracker." />
+<meta name="author" content="Firstbase" />
+<meta name="theme-color" content="#030e24" />
+<!-- Internal sales tool — not for public search engines -->
+<meta name="robots" content="noindex, nofollow" />
+
+<!-- Open Graph (Slack, Teams, LinkedIn, iMessage link previews) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Firstbase" />
+<meta property="og:title" content="Firstbase — Global SLO Performance" />
+<meta property="og:description" content="Live service-level performance across Firstbase's global fulfillment network — region-by-region, updated from the live SLO tracker." />
+<meta property="og:locale" content="en_US" />
+
+<!-- Twitter / X link preview -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Firstbase — Global SLO Performance" />
+<meta name="twitter:description" content="Live service-level performance across Firstbase's global fulfillment network — region-by-region, updated from the live SLO tracker." />
+
+<!-- Favicon: inline SVG (no separate file needed). Navy tile + Firstbase coral F-mark. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23030e24'/><g fill='%23f46e73'><polygon opacity='.75' points='32 50 12 36 12 26 32 38 32 50'/><polygon opacity='.85' points='32 13 12 26 12 36 32 23 32 13'/><polygon opacity='.95' points='32 38 32 23 45 30 32 38'/></g></svg>" />
+<!-- Fallback for iOS home-screen / older browsers that prefer a square raster icon -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='34' fill='%23030e24'/><g fill='%23f46e73' transform='translate(46 42)'><polygon opacity='.75' points='44 78 4 50 4 32 44 56 44 78'/><polygon opacity='.85' points='44 8 4 32 4 50 44 28 44 8'/><polygon opacity='.95' points='44 56 44 28 70 42 44 56'/></g></svg>" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+  /* ============================================================
+     Firstbase brand system
+     navy #030e24 · blue #5bb5fd · coral #f46e73 · steel #5d646c
+     ============================================================ */
+  :root {
+    --fb-navy: #030e24;
+    --fb-navy-2: #0a1730;
+    --fb-blue: #5bb5fd;
+    --fb-blue-deep: #4264d1;
+    --fb-blue-2: #6ce2ff;
+    --fb-coral: #f46e73;
+    --fb-purple: #9e77ed;
+    --fb-purple-soft: #f4ebff;
+    --fb-blue-soft: #eff8ff;
+    --fb-bg: #ffffff;
+    --fb-bg-soft: #f9fafb;
+    --fb-bg-2: #f2f4f7;
+    --fb-border: #e4ebf3;
+    --fb-border-2: #dee5ee;
+    --fb-text: #030e24;
+    --fb-text-2: #5d646c;
+    --fb-text-3: #74889d;
+    --fb-good: #16b06a;
+    --fb-good-soft: #e6f6ee;
+    --fb-warn: #d59024;
+    --fb-warn-soft: #fff5e2;
+    --fb-bad: #f46e73;
+    --fb-bad-soft: #fde7e8;
+    --fb-shadow: 0 1px 2px rgba(3, 14, 36, 0.04), 0 4px 12px rgba(3, 14, 36, 0.06);
+    --fb-shadow-lg: 0 8px 24px rgba(3, 14, 36, 0.08), 0 2px 6px rgba(3, 14, 36, 0.04);
+    --fb-radius: 14px;
+    --fb-radius-sm: 10px;
+    --fb-font: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--fb-font);
+    color: var(--fb-text);
+    background: var(--fb-bg-soft);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "ss01","cv11";
+    letter-spacing: -0.005em;
+  }
+
+  /* ============== Top nav (Firstbase-style) ============== */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    background: var(--fb-bg);
+    border-bottom: 1px solid var(--fb-border);
+    height: 64px;
+    display: flex; align-items: center; padding: 0 28px; gap: 24px;
+  }
+  .logo {
+    display: inline-flex; align-items: center;
+    text-decoration: none;
+  }
+  .logo svg {
+    height: 26px; width: auto; display: block;
+  }
+  .logo .wordmark { fill: var(--fb-navy); }
+  .logo .mark { fill: var(--fb-coral); }
+  .nav-divider { width: 1px; height: 22px; background: var(--fb-border); }
+  .nav-title {
+    font-size: 14px; color: var(--fb-text-2); font-weight: 500;
+  }
+  .nav-title b { color: var(--fb-text); font-weight: 600; }
+  .nav-spacer { flex: 1; }
+  .nav-status {
+    display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fb-text-2);
+    padding: 6px 12px; border-radius: 999px; background: var(--fb-bg-soft);
+    border: 1px solid var(--fb-border);
+  }
+  .nav-status .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--fb-good); animation: pulse-dot 2s infinite;
+    box-shadow: 0 0 0 0 rgba(22, 176, 106, 0.45);
+  }
+  .nav-status.loading .dot { background: var(--fb-warn); }
+  .nav-status.error .dot { background: var(--fb-bad); animation: none;}
+  @keyframes pulse-dot {
+    0% { box-shadow: 0 0 0 0 rgba(22, 176, 106, 0.45); }
+    70% { box-shadow: 0 0 0 6px rgba(22, 176, 106, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(22, 176, 106, 0); }
+  }
+  .nav-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--fb-navy); color: white; border: 0;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer; letter-spacing: -0.005em;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .nav-btn:hover { background: #0a1730; transform: translateY(-1px); }
+  .nav-btn.ghost { background: transparent; color: var(--fb-text); border: 1px solid var(--fb-border); }
+  .nav-btn.ghost:hover { background: var(--fb-bg-soft); }
+
+  /* ============== Sub-header summary ============== */
+  .sub-head {
+    position: fixed; top: 64px; left: 0; right: 0; z-index: 15;
+    background: var(--fb-bg);
+    border-bottom: 1px solid var(--fb-border);
+    padding: 16px 28px;
+  }
+  .sub-head-inner { display: flex; gap: 14px; align-items: stretch; flex-wrap: wrap; }
+  .pageTitle {
+    display: flex; flex-direction: column; gap: 2px; padding-right: 18px;
+    border-right: 1px solid var(--fb-border); margin-right: 6px;
+  }
+  .pageTitle h1 {
+    margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--fb-navy);
+  }
+  .pageTitle .updated { font-size: 11px; color: var(--fb-text-3); }
+  .summary { display: flex; gap: 24px; flex: 1; flex-wrap: wrap; align-items: stretch; }
+  .summary-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 320px; }
+  .summary-group-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 700;
+  }
+  .summary-group.global-group .summary-group-head { color: var(--fb-navy); }
+  .summary-group.regional-group .summary-group-head { color: var(--fb-blue-deep); }
+  .summary-group-head .lead-rule {
+    flex: 1; height: 1px; background: currentColor; opacity: 0.18;
+  }
+  .summary-cards-row { display: flex; gap: 10px; }
+
+  /* Inline SVG icons */
+  .ico {
+    width: 14px; height: 14px; display: inline-block; vertical-align: -2px;
+    flex-shrink: 0;
+  }
+  .ico.lg { width: 18px; height: 18px; vertical-align: -3px; }
+  .ico.sm { width: 12px; height: 12px; }
+
+  /* Region letter badges — enterprise-style identity tags */
+  .region-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 3px 8px; border-radius: 5px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    background: var(--fb-bg-2); color: var(--fb-navy);
+    border: 1px solid var(--fb-border);
+    vertical-align: middle; white-space: nowrap;
+  }
+  .region-badge.global {
+    background: var(--fb-navy); color: white; border: 0;
+    padding: 3px 10px;
+  }
+  .panel-region-name .region-badge {
+    font-size: 11px; padding: 4px 10px;
+  }
+  .summary-card.global .region-badge.global {
+    background: rgba(255, 255, 255, 0.14);
+    color: white;
+  }
+
+  .summary-card {
+    background: var(--fb-bg);
+    border: 1px solid var(--fb-border);
+    border-radius: var(--fb-radius);
+    padding: 12px 16px;
+    min-width: 180px;
+    flex: 1;
+    transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .summary-card:hover { border-color: #cdd7e3; box-shadow: var(--fb-shadow); transform: translateY(-1px); }
+  .summary-card .scope {
+    font-size: 10px; letter-spacing: 0.14em;
+    color: var(--fb-text-3); text-transform: uppercase; font-weight: 700;
+  }
+  .summary-card .label { font-size: 12px; color: var(--fb-text-2); margin-top: 2px; font-weight: 500;}
+  .summary-card .value-row {
+    display: flex; align-items: baseline; gap: 8px; margin-top: 4px;
+  }
+  .summary-card .value {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.025em; color: var(--fb-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .pill.good { background: var(--fb-good-soft); color: var(--fb-good); }
+  .pill.good::before { background: var(--fb-good); }
+  .pill.warn { background: var(--fb-warn-soft); color: var(--fb-warn); }
+  .pill.warn::before { background: var(--fb-warn); }
+  .pill.bad  { background: var(--fb-bad-soft); color: var(--fb-bad); }
+  .pill.bad::before  { background: var(--fb-bad); }
+  .summary-card .footnote { font-size: 11px; color: var(--fb-text-3); margin-top: 4px;}
+  .summary-card .footnote.days-line {
+    color: var(--fb-navy); font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+
+  /* Global cards — "executive" / hero treatment: solid navy on white page */
+  .summary-card.global {
+    background: linear-gradient(135deg, #030e24 0%, #0a1730 60%, #122452 100%);
+    border-color: transparent;
+    color: white;
+    position: relative; overflow: hidden;
+  }
+  .summary-card.global::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(122, 162, 255, 0.07) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+  .summary-card.global > * { position: relative; z-index: 1; }
+  .summary-card.global .scope { color: var(--fb-blue); }
+  .summary-card.global .label { color: rgba(255, 255, 255, 0.74); }
+  .summary-card.global .footnote { color: rgba(255, 255, 255, 0.55); }
+  .summary-card.global .footnote.days-line { color: var(--fb-blue-2); }
+  .summary-card.global .pill.good { background: rgba(46, 229, 164, 0.16); color: #4be3a6; }
+  .summary-card.global .pill.warn { background: rgba(255, 193, 77, 0.18); color: #ffd278; }
+  .summary-card.global .pill.bad  { background: rgba(255, 130, 134, 0.18); color: #ff9094; }
+  .summary-card.global:hover {
+    border-color: transparent;
+    box-shadow: 0 10px 30px rgba(3, 14, 36, 0.25);
+  }
+
+  /* Regional cards — "operational" treatment: white with blue accent bar */
+  .summary-card.regional {
+    background: var(--fb-bg);
+    border-left: 3px solid var(--fb-blue);
+  }
+  .summary-card.regional:hover {
+    border-color: var(--fb-blue);
+    border-left-color: var(--fb-blue);
+  }
+
+  /* ============== Globe ============== */
+  main { position: absolute; inset: 0; padding-top: 188px; padding-bottom: 0; }
+  #globe { width: 100%; height: calc(100vh - 188px); cursor: grab; display: block; }
+  #globe:active { cursor: grabbing; }
+
+  .controls {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px; z-index: 5;
+    background: var(--fb-bg);
+    border: 1px solid var(--fb-border);
+    border-radius: 999px; padding: 4px;
+    box-shadow: var(--fb-shadow);
+  }
+  .controls button {
+    background: transparent; border: 0; color: var(--fb-text-2);
+    padding: 8px 16px; border-radius: 999px; cursor: pointer;
+    font-size: 12px; font-weight: 600; font-family: inherit;
+    transition: background .15s ease, color .15s ease;
+    letter-spacing: -0.005em;
+  }
+  .controls button:hover { color: var(--fb-text); background: var(--fb-bg-soft); }
+  .controls button.active { background: var(--fb-navy); color: white; }
+
+  .legend {
+    position: fixed; left: 22px; bottom: 22px; z-index: 5;
+    background: var(--fb-bg); border: 1px solid var(--fb-border);
+    border-radius: var(--fb-radius); padding: 12px 14px;
+    font-size: 11px; color: var(--fb-text-2); max-width: 240px;
+    box-shadow: var(--fb-shadow);
+  }
+  .legend strong {
+    color: var(--fb-text); display: block; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; font-weight: 700;
+  }
+  .legend-row { display: flex; align-items: center; gap: 8px; margin-top: 4px;}
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;}
+  .legend-good { background: var(--fb-good); }
+  .legend-warn { background: var(--fb-warn); }
+  .legend-bad  { background: var(--fb-bad); }
+  .legend-hint { color: var(--fb-text-3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--fb-border); }
+
+  .floating-pill {
+    position: fixed; right: 22px; bottom: 22px; z-index: 5;
+    font-size: 11px; color: var(--fb-text-3);
+    background: var(--fb-bg); border: 1px solid var(--fb-border);
+    border-radius: 999px; padding: 6px 14px;
+    box-shadow: var(--fb-shadow);
+  }
+
+  /* ============== Side panel ============== */
+  aside.panel {
+    position: fixed; top: 64px; right: 0; bottom: 0;
+    width: 460px; max-width: 100%;
+    background: var(--fb-bg);
+    border-left: 1px solid var(--fb-border);
+    transform: translateX(100%);
+    transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow-y: auto;
+    z-index: 18;
+    box-shadow: -8px 0 24px rgba(3, 14, 36, 0.06);
+  }
+  aside.panel.open { transform: translateX(0); }
+  .panel-head {
+    padding: 24px 26px 14px; border-bottom: 1px solid var(--fb-border);
+    background: var(--fb-bg);
+    position: sticky; top: 0; z-index: 2;
+  }
+  .panel-region-name {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.025em;
+    display: flex; align-items: center; gap: 10px; color: var(--fb-navy);
+  }
+  .panel-region-sub {
+    font-size: 13px; color: var(--fb-text-2); margin-top: 4px; font-weight: 500;
+  }
+  .panel-pillrow { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;}
+  .panel-close {
+    position: absolute; top: 16px; right: 18px;
+    background: var(--fb-bg-soft); border: 1px solid var(--fb-border); color: var(--fb-text);
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+    display: grid; place-items: center; font-size: 18px; line-height: 1;
+    transition: background .15s ease;
+  }
+  .panel-close:hover { background: var(--fb-bg-2); }
+
+  .metric-block {
+    margin: 16px 26px;
+    border: 1px solid var(--fb-border);
+    border-radius: var(--fb-radius);
+    overflow: hidden;
+    background: var(--fb-bg);
+  }
+  .metric-block.cth { border-color: rgba(91, 181, 253, 0.35); }
+  .metric-block.dts { border-color: rgba(158, 119, 237, 0.30); }
+  .metric-block.cts { border-color: var(--fb-border); }
+  .metric-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--fb-border);
+    background: var(--fb-bg-soft);
+  }
+  .metric-block.cth .metric-head { background: var(--fb-blue-soft); border-bottom-color: rgba(91, 181, 253, 0.25); }
+  .metric-block.dts .metric-head { background: var(--fb-purple-soft); border-bottom-color: rgba(158, 119, 237, 0.20); }
+
+  .metric-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .metric-title { font-weight: 700; font-size: 15px; color: var(--fb-navy); letter-spacing: -0.01em;}
+  .metric-title .short { color: var(--fb-text-3); font-weight: 500; margin-left: 6px; }
+  .metric-desc { font-size: 12px; color: var(--fb-text-2); margin-top: 2px; }
+  .metric-slo {
+    font-size: 11px; color: var(--fb-text-2); margin-top: 8px;
+    display: inline-flex; gap: 6px; align-items: center;
+    background: white; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--fb-border);
+  }
+  .metric-slo b { color: var(--fb-navy); font-weight: 600; }
+
+  /* Actuals strip (days vs SLO) */
+  .actuals-strip {
+    padding: 14px 18px 14px;
+    background: var(--fb-bg);
+    border-bottom: 1px solid var(--fb-border);
+  }
+  .actuals-strip .actuals-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fb-text-3); font-weight: 700; margin-bottom: 8px;
+  }
+  .actuals-row {
+    display: flex; align-items: stretch; gap: 14px;
+  }
+  .actuals-card {
+    flex: 1; padding: 10px 12px;
+    background: var(--fb-bg-soft); border: 1px solid var(--fb-border);
+    border-radius: var(--fb-radius-sm);
+  }
+  .actuals-card.actual { background: linear-gradient(135deg, var(--fb-blue-soft), white); border-color: rgba(91, 181, 253, 0.4);}
+  .actuals-card .a-label {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fb-text-3); font-weight: 700;
+  }
+  .actuals-card .a-value {
+    font-size: 24px; font-weight: 800; letter-spacing: -0.025em;
+    color: var(--fb-navy); margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .actuals-card .a-unit {
+    font-size: 13px; font-weight: 600; color: var(--fb-text-2);
+  }
+  .actuals-card .a-foot {
+    font-size: 10px; color: var(--fb-text-3); margin-top: 2px;
+  }
+  .vs-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: -0.005em;
+    align-self: center;
+  }
+  .vs-pill.beat { background: var(--fb-good-soft); color: var(--fb-good); }
+  .vs-pill.miss { background: var(--fb-bad-soft); color: var(--fb-bad); }
+  .vs-pill.warn { background: var(--fb-warn-soft); color: var(--fb-warn); }
+
+  .days-bar {
+    margin-top: 12px; position: relative; height: 8px;
+    background: var(--fb-bg-2); border-radius: 999px; overflow: visible;
+  }
+  .days-bar .slo-zone {
+    position: absolute; top: 0; bottom: 0;
+    background: rgba(22, 176, 106, 0.18);
+    border-left: 2px solid rgba(22, 176, 106, 0.55);
+    border-right: 2px solid rgba(22, 176, 106, 0.55);
+  }
+  .days-bar .actual-marker {
+    position: absolute; top: -3px; bottom: -3px; width: 3px;
+    background: var(--fb-navy); border-radius: 2px;
+    box-shadow: 0 0 0 2px white;
+  }
+  .days-bar-axis {
+    display: flex; justify-content: space-between;
+    margin-top: 4px; font-size: 9px; color: var(--fb-text-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Region stats grid (volume + countries + warehouses) */
+  .region-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin: 16px 26px;
+  }
+  .stat-card {
+    padding: 12px 14px;
+    background: var(--fb-bg); border: 1px solid var(--fb-border);
+    border-radius: var(--fb-radius-sm);
+    min-height: 86px;
+  }
+  .stat-card.volume {
+    background: linear-gradient(135deg, var(--fb-blue-soft), white);
+    border-color: rgba(91, 181, 253, 0.4);
+  }
+  .stat-card.muted { background: var(--fb-bg-soft); }
+  .stat-card .stat-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fb-text-3); font-weight: 700;
+  }
+  .stat-card .stat-value {
+    font-size: 24px; font-weight: 800; letter-spacing: -0.025em;
+    color: var(--fb-navy); margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-card .stat-foot {
+    font-size: 10px; color: var(--fb-text-3); margin-top: 4px;
+    line-height: 1.3; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+
+  /* Countries + warehouses lists */
+  .region-extras { padding: 14px 18px 18px; background: var(--fb-bg); }
+  .extras-head {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--fb-text-3); font-weight: 700; margin: 10px 0 8px;
+  }
+  .extras-head:first-child { margin-top: 0; }
+  .country-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .country-chip {
+    display: inline-flex; align-items: center;
+    padding: 4px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 500; color: var(--fb-text);
+    background: var(--fb-bg-soft); border: 1px solid var(--fb-border);
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .country-chip.active {
+    background: var(--fb-navy); color: white; border-color: var(--fb-navy);
+  }
+  .wh-list { display: flex; flex-direction: column; gap: 4px; }
+  .wh-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--fb-radius-sm);
+    background: var(--fb-bg-soft); border: 1px solid var(--fb-border);
+  }
+  .wh-item.active {
+    background: var(--fb-blue-soft); border-color: rgba(91,181,253,0.5);
+  }
+  .wh-item .wh-pin {
+    width: 24px; height: 24px; display: inline-flex;
+    align-items: center; justify-content: center;
+    color: var(--fb-blue-deep);
+    background: var(--fb-blue-soft); border-radius: 6px;
+  }
+  .wh-item .wh-pin .ico { width: 14px; height: 14px; vertical-align: 0; }
+  .wh-item.active .wh-pin { color: white; background: var(--fb-navy); }
+
+  .legend-hint .ico { color: var(--fb-blue-deep); margin-right: 4px; }
+  .wh-item b { font-size: 12px; font-weight: 600; color: var(--fb-text); display: block; }
+  .wh-item .wh-country {
+    font-size: 10px; color: var(--fb-text-3); font-weight: 500;
+  }
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  }
+  .metric-cell {
+    padding: 14px 12px; text-align: left; border-right: 1px solid var(--fb-border);
+  }
+  .metric-cell:last-child { border-right: 0; }
+  .metric-cell .cell-label {
+    font-size: 10px; color: var(--fb-text-3); text-transform: uppercase;
+    letter-spacing: 0.1em; font-weight: 700;
+  }
+  .metric-cell .cell-value {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.025em;
+    margin-top: 4px; font-variant-numeric: tabular-nums; color: var(--fb-text);
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .delta { font-size: 11px; font-weight: 600; }
+  .delta.up { color: var(--fb-good); }
+  .delta.down { color: var(--fb-bad); }
+  .metric-cell .cell-foot { font-size: 10px; color: var(--fb-text-3); margin-top: 2px;}
+
+  .bar-block { padding: 0 18px 16px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .bar-row-label {
+    font-size: 11px; color: var(--fb-text-2); width: 88px; flex-shrink: 0; font-weight: 600;
+  }
+  .bar-track {
+    flex: 1; height: 6px; border-radius: 999px;
+    background: var(--fb-bg-2); overflow: hidden; position: relative;
+  }
+  .bar-track::after {
+    content: ""; position: absolute; left: 95%; top: -3px; bottom: -3px; width: 1px;
+    background: var(--fb-text-3); opacity: 0.35;
+  }
+  .bar-fill { height: 100%; border-radius: 999px; transition: width .5s cubic-bezier(0.22, 1, 0.36, 1);}
+  .bar-row-value {
+    font-size: 12px; color: var(--fb-text); width: 56px; text-align: right;
+    flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .bar-target-label { font-size: 9px; color: var(--fb-text-3); margin-top: 2px; padding-left: 98px; }
+
+  /* ============== Tooltip & pins ============== */
+  .tooltip {
+    position: fixed; pointer-events: none;
+    background: var(--fb-navy); color: white;
+    border-radius: var(--fb-radius-sm); padding: 12px 14px;
+    font-size: 12px; transform: translate(-50%, calc(-100% - 14px));
+    box-shadow: 0 12px 24px rgba(3, 14, 36, 0.18);
+    opacity: 0; transition: opacity .12s ease;
+    min-width: 180px; z-index: 30;
+  }
+  .tooltip::after {
+    content: ""; position: absolute; left: 50%; bottom: -5px;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px; background: var(--fb-navy);
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .ttl { font-weight: 700; font-size: 13px; letter-spacing: -0.01em; }
+  .tooltip .row { display:flex; justify-content:space-between; gap:12px; color: rgba(255,255,255,0.7); margin-top: 4px;}
+  .tooltip .row b { color: white; font-weight: 600;}
+  .tooltip .hint { font-size: 10px; color: var(--fb-blue-2); margin-top: 8px; opacity: 0.8;}
+
+  .country-base { fill: #e9eef5; stroke: #cfd8e3; stroke-width: 0.5; }
+  .country-served { fill: #c2d8eb; stroke: #94aac4; stroke-width: 0.4; cursor: pointer; transition: fill .15s ease; }
+  .country-served:hover { fill: var(--fb-blue); }
+  .country-active { fill: var(--fb-navy) !important; stroke: var(--fb-navy) !important;}
+  .graticule { fill: none; stroke: rgba(3, 14, 36, 0.05); stroke-width: 0.5; }
+  .ocean { fill: var(--fb-blue-soft); stroke: rgba(3, 14, 36, 0.10); stroke-width: 0.7; }
+
+  .pin g { cursor: pointer; }
+  .pin-shadow { fill: rgba(3, 14, 36, 0.12); }
+  .pin-ring {
+    fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0.5;
+    transform-origin: center;
+    animation: pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.7); opacity: 0.7; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  /* ============== Loading shimmer ============== */
+  .skeleton {
+    background: linear-gradient(90deg, var(--fb-bg-2) 0%, var(--fb-bg) 50%, var(--fb-bg-2) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite linear;
+    border-radius: 6px;
+    color: transparent !important;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .toast {
+    position: fixed; top: 76px; right: 22px;
+    background: var(--fb-navy); color: white;
+    padding: 10px 16px; border-radius: var(--fb-radius-sm);
+    font-size: 12px; font-weight: 500;
+    box-shadow: var(--fb-shadow-lg);
+    z-index: 50; opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity .25s ease, transform .25s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--fb-bad); }
+
+  @media (max-width: 1100px) { aside.panel { width: 400px; } }
+  @media (max-width: 900px) {
+    .nav { padding: 0 16px; }
+    .sub-head { padding: 12px 16px; }
+    .pageTitle { padding-right: 0; border-right: 0; margin-right: 0; }
+    .summary-card { min-width: 140px; padding: 10px 12px; }
+    .summary-card .value { font-size: 20px; }
+    aside.panel { width: 100%; top: 64px; }
+    main { padding-top: 230px; }
+    #globe { height: calc(100vh - 230px); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="#" class="logo" aria-label="Firstbase">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2068.02 620.21" role="img">
+      <title>Firstbase</title>
+      <g class="wordmark">
+        <path d="M545.3,523.01h35.41v8.63h-35.41v-8.63h0ZM543.46,549.69h-10.91l24.54-68.14h11.88l24.5,68.14h-10.91l-19.28-55.74h-.53l-19.28,55.74h0Z"/>
+        <path d="M610.55,519.33v30.32h-9.95v-51.09h9.55v8.33h.61c1.18-2.72,3.02-4.86,5.52-6.53,2.5-1.62,5.7-2.45,9.51-2.45,3.46,0,6.53.74,9.16,2.19,2.63,1.45,4.64,3.59,6.09,6.49,1.45,2.85,2.15,6.4,2.15,10.6v32.51h-9.95v-31.29c0-3.68-.96-6.62-2.89-8.72-1.93-2.1-4.56-3.15-7.93-3.15-2.32,0-4.34.48-6.13,1.49-1.8,1.01-3.2,2.45-4.21,4.38-1.05,1.93-1.53,4.21-1.53,6.92h0Z"/>
+        <path d="M686,523.01h35.41v8.63h-35.41v-8.63h0ZM684.16,549.69h-10.91l24.54-68.14h11.88l24.5,68.14h-10.91l-19.28-55.74h-.53l-19.28,55.74h0Z"/>
+        <path d="M751.03,524.15c0,3.59.53,6.75,1.58,9.47,1.05,2.72,2.54,4.82,4.51,6.35,1.97,1.53,4.38,2.28,7.23,2.28s5.48-.79,7.45-2.37c2.02-1.58,3.51-3.72,4.56-6.49,1.05-2.72,1.53-5.78,1.53-9.2s-.53-6.4-1.53-9.07c-1.01-2.67-2.5-4.82-4.51-6.35-2.02-1.53-4.51-2.32-7.49-2.32s-5.3.74-7.32,2.23c-1.97,1.49-3.51,3.55-4.51,6.22-1.01,2.67-1.53,5.78-1.53,9.33l.04-.09h0ZM741.3,568.84v-70.24h9.73v8.28h.83c.57-1.05,1.4-2.28,2.5-3.68,1.1-1.4,2.59-2.63,4.51-3.68,1.93-1.05,4.47-1.58,7.67-1.58,4.12,0,7.8,1.05,11.04,3.11,3.24,2.1,5.78,5.08,7.62,9.03,1.84,3.94,2.76,8.63,2.76,14.15s-.92,10.25-2.76,14.2c-1.84,3.94-4.38,6.97-7.58,9.07-3.2,2.1-6.88,3.16-11,3.16-3.11,0-5.65-.53-7.58-1.58-1.97-1.05-3.51-2.28-4.6-3.64-1.1-1.4-1.97-2.63-2.54-3.72h-.61v27.12h-9.99Z"/>
+        <path d="M806.99,524.15c0,3.59.53,6.75,1.58,9.47,1.05,2.72,2.54,4.82,4.51,6.35,1.97,1.53,4.38,2.28,7.23,2.28s5.48-.79,7.45-2.37c2.02-1.58,3.51-3.72,4.56-6.49,1.05-2.72,1.53-5.78,1.53-9.2s-.53-6.4-1.53-9.07c-1.01-2.67-2.5-4.82-4.51-6.35-2.02-1.53-4.51-2.32-7.49-2.32s-5.3.74-7.32,2.23c-1.97,1.49-3.51,3.55-4.51,6.22-1.01,2.67-1.53,5.78-1.53,9.33l.04-.09h0ZM797.26,568.84v-70.24h9.73v8.28h.83c.57-1.05,1.4-2.28,2.5-3.68,1.1-1.4,2.59-2.63,4.51-3.68,1.93-1.05,4.47-1.58,7.67-1.58,4.12,0,7.8,1.05,11.04,3.11,3.24,2.1,5.78,5.08,7.62,9.03,1.84,3.94,2.76,8.63,2.76,14.15s-.92,10.25-2.76,14.2c-1.84,3.94-4.38,6.97-7.58,9.07-3.2,2.1-6.88,3.16-11,3.16-3.11,0-5.65-.53-7.58-1.58-1.97-1.05-3.51-2.28-4.6-3.64-1.1-1.4-1.97-2.63-2.54-3.72h-.61v27.12h-9.99Z"/>
+        <path d="M864.26,540.71h11.22c5.17,0,9.51-.96,12.93-2.94,3.42-1.97,6-4.82,7.71-8.54,1.71-3.72,2.54-8.28,2.54-13.67s-.83-9.86-2.54-13.58c-1.71-3.72-4.21-6.57-7.58-8.5-3.33-1.93-7.49-2.89-12.49-2.89h-11.83v50.17l.04-.04h0ZM876.05,549.69h-22.04v-68.14h22.74c6.66,0,12.4,1.36,17.18,4.08,4.78,2.72,8.46,6.62,11.04,11.66,2.54,5.08,3.86,11.13,3.86,18.23s-1.27,13.19-3.86,18.32c-2.59,5.08-6.31,9.03-11.17,11.74-4.86,2.72-10.78,4.12-17.7,4.12h-.04Z"/>
+        <path d="M918.91,549.69v-51.09h9.95v51.09h-9.95ZM923.95,490.71c-1.71,0-3.2-.57-4.43-1.75-1.23-1.18-1.84-2.54-1.84-4.16s.61-3.07,1.84-4.21c1.23-1.18,2.72-1.75,4.43-1.75s3.2.57,4.43,1.75c1.23,1.18,1.84,2.59,1.84,4.21s-.61,3.02-1.84,4.16c-1.23,1.14-2.72,1.75-4.43,1.75h0Z"/>
+        <path d="M940.38,549.69v-51.09h9.6v8.11h.53c.92-2.76,2.59-4.91,4.95-6.49,2.37-1.58,5.04-2.37,8.02-2.37.61,0,1.36,0,2.19.04.88.04,1.53.09,2.02.18v9.51c-.39-.13-1.1-.22-2.15-.39-1.01-.13-2.06-.22-3.07-.22-2.37,0-4.43.48-6.27,1.49-1.84.96-3.29,2.37-4.34,4.08-1.05,1.71-1.58,3.72-1.58,5.92v31.2h-9.95l.04.04h0Z"/>
+        <path d="M994.63,550.7c-5.04,0-9.38-1.1-12.97-3.24-3.59-2.15-6.4-5.21-8.37-9.16-1.97-3.94-2.94-8.54-2.94-13.85s.96-9.86,2.94-13.85c1.97-3.99,4.73-7.1,8.24-9.33,3.55-2.23,7.67-3.37,12.4-3.37,2.89,0,5.7.48,8.37,1.45,2.72.96,5.13,2.45,7.27,4.51,2.15,2.06,3.86,4.69,5.08,7.93,1.23,3.24,1.84,7.19,1.84,11.83v3.51h-40.62v-7.45h30.85c0-2.63-.53-4.95-1.58-6.97-1.05-2.02-2.54-3.64-4.47-4.82-1.93-1.18-4.16-1.75-6.75-1.75-2.8,0-5.21.7-7.32,2.06-2.06,1.36-3.68,3.16-4.78,5.3-1.14,2.19-1.67,4.56-1.67,7.1v5.83c0,3.42.61,6.31,1.8,8.72,1.23,2.41,2.89,4.21,5.08,5.48,2.19,1.27,4.73,1.88,7.62,1.88,1.88,0,3.59-.26,5.17-.83,1.53-.53,2.89-1.36,4.03-2.45,1.14-1.1,2.02-2.41,2.59-4.03l9.42,1.71c-.74,2.76-2.1,5.21-4.03,7.27-1.93,2.06-4.38,3.68-7.27,4.82-2.94,1.14-6.22,1.71-9.95,1.71h0Z"/>
+        <path d="M1047.3,550.7c-4.95,0-9.2-1.14-12.75-3.37-3.55-2.23-6.31-5.35-8.19-9.33-1.93-3.99-2.85-8.5-2.85-13.63s.96-9.77,2.94-13.76c1.97-3.99,4.69-7.1,8.24-9.33,3.55-2.23,7.71-3.37,12.53-3.37,3.9,0,7.32.7,10.39,2.15,3.02,1.45,5.48,3.42,7.36,6,1.88,2.59,2.98,5.57,3.33,9.03h-9.68c-.53-2.41-1.75-4.47-3.64-6.18-1.88-1.75-4.43-2.59-7.58-2.59-2.76,0-5.21.74-7.27,2.19-2.06,1.45-3.68,3.51-4.82,6.18-1.14,2.67-1.71,5.83-1.71,9.47s.57,6.92,1.71,9.64c1.14,2.72,2.72,4.82,4.82,6.27,2.06,1.49,4.51,2.23,7.32,2.23,1.88,0,3.59-.35,5.13-1.05,1.53-.7,2.85-1.71,3.9-3.02,1.05-1.31,1.8-2.89,2.19-4.73h9.68c-.35,3.29-1.45,6.27-3.24,8.85-1.8,2.59-4.21,4.64-7.19,6.13-2.98,1.49-6.53,2.23-10.56,2.23h-.04Z"/>
+        <path d="M1080.51,486.33h9.95v48.33c0,1.93.31,3.37.88,4.34.57.96,1.31,1.62,2.23,1.97.92.35,1.93.53,3.02.53.79,0,1.49-.04,2.1-.18.61-.13,1.05-.22,1.4-.26l1.8,8.24c-.57.22-1.4.44-2.45.7-1.05.22-2.41.35-3.99.39-2.63.04-5.04-.44-7.32-1.4-2.28-.96-4.08-2.5-5.48-4.51-1.4-2.06-2.1-4.6-2.1-7.67v-50.39l-.04-.09h0ZM1100.93,498.6v7.98h-27.91v-7.98h27.91Z"/>
+        <path d="M1190.37,503.73h-10.39c-.39-2.23-1.14-4.16-2.23-5.87-1.1-1.71-2.41-3.11-3.99-4.29-1.58-1.18-3.33-2.06-5.26-2.67-1.93-.61-3.99-.92-6.18-.92-3.94,0-7.45,1.01-10.52,2.98-3.11,1.97-5.52,4.86-7.32,8.68-1.8,3.81-2.67,8.46-2.67,13.98s.88,10.21,2.67,14.02c1.8,3.81,4.25,6.7,7.32,8.63,3.11,1.97,6.62,2.94,10.47,2.94,2.15,0,4.21-.31,6.13-.88,1.93-.57,3.68-1.45,5.26-2.63,1.58-1.14,2.94-2.59,4.03-4.25,1.1-1.67,1.84-3.59,2.28-5.78h10.39c-.57,3.37-1.62,6.44-3.2,9.25-1.58,2.8-3.64,5.21-6.09,7.27-2.45,2.06-5.3,3.59-8.46,4.69-3.16,1.1-6.62,1.67-10.39,1.67-5.92,0-11.17-1.4-15.77-4.21-4.6-2.8-8.24-6.84-10.91-12.05-2.67-5.21-3.99-11.48-3.99-18.71s1.31-13.54,3.99-18.75c2.67-5.21,6.31-9.25,10.91-12.05,4.6-2.8,9.86-4.21,15.73-4.21,3.59,0,6.97.53,10.12,1.53,3.16,1.05,5.96,2.54,8.46,4.51,2.5,1.97,4.56,4.38,6.22,7.23,1.62,2.85,2.76,6.09,3.33,9.77l.04.13h0Z"/>
+        <path d="M1221.57,542.38c3.11,0,5.65-.83,7.71-2.45,2.06-1.67,3.55-3.81,4.56-6.57,1.01-2.72,1.49-5.74,1.49-9.03s-.48-6.27-1.49-8.98c-.96-2.72-2.5-4.95-4.56-6.62-2.06-1.67-4.6-2.5-7.71-2.5s-5.7.83-7.76,2.5c-2.06,1.67-3.59,3.86-4.56,6.62-1.01,2.72-1.49,5.74-1.49,8.98s.48,6.31,1.49,9.03c.96,2.72,2.5,4.91,4.56,6.57,2.06,1.62,4.64,2.45,7.76,2.45h0ZM1221.53,550.7c-4.78,0-8.98-1.1-12.53-3.29-3.55-2.19-6.35-5.26-8.33-9.2-1.97-3.94-2.98-8.54-2.98-13.85s1.01-9.95,2.98-13.89c1.97-3.94,4.73-7.06,8.33-9.25,3.59-2.19,7.76-3.29,12.53-3.29s8.98,1.1,12.53,3.29c3.55,2.19,6.35,5.26,8.33,9.25,1.97,3.99,2.98,8.59,2.98,13.89s-1.01,9.9-2.98,13.85c-1.97,3.94-4.73,7.01-8.33,9.2-3.59,2.19-7.76,3.29-12.53,3.29h0Z"/>
+        <path d="M1254.52,549.69v-51.09h9.55v8.33h.61c1.05-2.8,2.8-5,5.21-6.62,2.41-1.58,5.3-2.37,8.68-2.37s6.27.79,8.59,2.41c2.32,1.58,4.03,3.81,5.13,6.57h.53c1.23-2.72,3.15-4.91,5.83-6.53,2.67-1.62,5.83-2.45,9.51-2.45,4.64,0,8.41,1.45,11.35,4.38,2.94,2.89,4.43,7.27,4.43,13.15v34.27h-9.95v-33.35c0-3.46-.96-5.96-2.85-7.54-1.88-1.53-4.12-2.32-6.75-2.32-3.24,0-5.74,1.01-7.54,2.98-1.8,1.97-2.72,4.51-2.72,7.62v32.56h-9.9v-33.96c0-2.76-.88-5-2.59-6.7-1.75-1.67-3.99-2.54-6.75-2.54-1.88,0-3.64.48-5.21,1.49-1.58.96-2.85,2.37-3.81,4.12-.96,1.75-1.45,3.77-1.45,6.09v31.51h-9.95.04Z"/>
+        <path d="M1345.19,524.15c0,3.59.53,6.75,1.58,9.47,1.05,2.72,2.54,4.82,4.51,6.35,1.97,1.53,4.38,2.28,7.23,2.28s5.48-.79,7.45-2.37c2.02-1.58,3.51-3.72,4.56-6.49,1.05-2.72,1.53-5.78,1.53-9.2s-.53-6.4-1.49-9.07c-1.01-2.67-2.54-4.82-4.51-6.35-1.97-1.53-4.51-2.32-7.49-2.32s-5.3.74-7.32,2.23c-1.97,1.49-3.51,3.55-4.51,6.22-1.01,2.67-1.53,5.78-1.53,9.33v-.09h0ZM1335.42,568.84v-70.24h9.73v8.28h.83c.57-1.05,1.4-2.28,2.5-3.68,1.1-1.4,2.59-2.63,4.51-3.68,1.93-1.05,4.47-1.58,7.67-1.58,4.12,0,7.8,1.05,11.04,3.11,3.24,2.1,5.78,5.08,7.62,9.03,1.84,3.94,2.76,8.63,2.76,14.15s-.92,10.25-2.76,14.2c-1.84,3.94-4.38,6.97-7.58,9.07-3.2,2.1-6.88,3.16-11,3.16-3.11,0-5.65-.53-7.58-1.58-1.97-1.05-3.51-2.28-4.6-3.64-1.1-1.4-1.97-2.63-2.54-3.72h-.61v27.12h-9.99Z"/>
+        <path d="M1408.42,542.81c2.76,0,5.13-.53,7.05-1.62,1.97-1.1,3.46-2.5,4.47-4.29,1.01-1.8,1.53-3.64,1.53-5.65v-6.57c-.35.35-1.05.7-2.06.96-1.01.26-2.15.57-3.46.74-1.27.22-2.54.39-3.77.57-1.23.18-2.23.31-3.07.44-1.93.26-3.68.66-5.26,1.23-1.58.57-2.85,1.4-3.81,2.5-.92,1.1-1.4,2.5-1.4,4.29,0,2.45.92,4.34,2.72,5.57,1.84,1.27,4.12,1.88,6.97,1.88l.09-.04h0ZM1406.23,550.83c-3.24,0-6.18-.61-8.76-1.8-2.63-1.23-4.69-2.98-6.22-5.26-1.53-2.28-2.28-5.13-2.28-8.5,0-2.89.57-5.26,1.67-7.1,1.1-1.88,2.59-3.33,4.51-4.43,1.88-1.1,3.99-1.93,6.31-2.45,2.32-.57,4.69-.96,7.1-1.27,3.07-.35,5.56-.66,7.45-.88,1.88-.22,3.29-.61,4.16-1.14.88-.53,1.31-1.4,1.31-2.59v-.22c0-2.89-.83-5.17-2.45-6.75-1.62-1.58-4.03-2.41-7.27-2.41s-6,.74-7.89,2.19c-1.93,1.49-3.24,3.11-3.99,4.91l-9.33-2.15c1.1-3.11,2.72-5.61,4.86-7.54,2.15-1.93,4.6-3.33,7.41-4.21,2.8-.88,5.74-1.31,8.81-1.31,2.02,0,4.21.22,6.49.7,2.28.48,4.43,1.36,6.44,2.63,2.02,1.27,3.64,3.07,4.95,5.39,1.27,2.32,1.93,5.39,1.93,9.11v33.92h-9.73v-6.97h-.39c-.66,1.27-1.62,2.54-2.89,3.81-1.27,1.23-2.94,2.28-4.95,3.11-2.02.83-4.43,1.23-7.27,1.23l.04-.04h0Z"/>
+        <path d="M1452.77,519.33v30.32h-9.95v-51.09h9.55v8.33h.61c1.18-2.72,3.02-4.86,5.52-6.53,2.5-1.62,5.7-2.45,9.51-2.45,3.46,0,6.53.74,9.16,2.19,2.63,1.45,4.64,3.59,6.09,6.49,1.45,2.85,2.15,6.4,2.15,10.6v32.51h-9.95v-31.29c0-3.68-.96-6.62-2.89-8.72-1.93-2.1-4.6-3.15-7.93-3.15-2.32,0-4.34.48-6.13,1.49-1.8,1.01-3.2,2.45-4.21,4.38-1.05,1.93-1.53,4.21-1.53,6.92h0Z"/>
+        <path d="M1501.32,568.84c-1.49,0-2.85-.13-4.08-.35-1.23-.22-2.15-.48-2.72-.74l2.41-8.15c1.8.48,3.42.7,4.86.61,1.4-.04,2.67-.61,3.77-1.58,1.1-1.01,2.06-2.63,2.89-4.91l1.23-3.37-18.71-51.75h10.65l12.93,39.66h.53l12.93-39.66h10.69l-21.08,57.93c-.96,2.67-2.23,4.91-3.72,6.75-1.49,1.84-3.29,3.24-5.39,4.16-2.1.92-4.51,1.4-7.23,1.4h.04Z"/>
+        <path d="M530.83,410.61V136.75h169.82v35.57h-128.5v83.44h116.33v35.44h-116.33v119.41h-41.32Z"/>
+        <path d="M749.62,173.52c-6.95,0-12.9-2.34-17.85-7.02-4.95-4.68-7.42-10.27-7.42-16.78s2.47-12.24,7.42-16.92,10.9-7.02,17.85-7.02,12.9,2.34,17.85,7.02,7.42,10.32,7.42,16.92-2.47,12.1-7.42,16.78c-4.95,4.68-10.9,7.02-17.85,7.02ZM729.43,410.61v-205.39h39.98v205.39h-39.98Z"/>
+        <path d="M796.81,410.61v-205.39h38.64v32.63h2.14c3.74-11.05,10.36-19.77,19.86-26.14,9.49-6.37,20.26-9.56,32.29-9.56,2.49,0,5.46.09,8.89.27,3.43.18,6.13.4,8.09.67v38.24c-1.61-.45-4.46-.96-8.56-1.54-4.1-.58-8.2-.87-12.3-.87-9.45,0-17.85,1.98-25.21,5.95-7.35,3.97-13.17,9.45-17.45,16.45-4.28,7-6.42,14.96-6.42,23.87v125.43h-39.98Z"/>
+        <path d="M1076.57,255.36l-36.24,6.42c-1.52-4.63-3.9-9.05-7.15-13.24-3.26-4.19-7.64-7.62-13.17-10.3-5.53-2.67-12.43-4.01-20.73-4.01-11.32,0-20.77,2.52-28.35,7.55-7.58,5.04-11.37,11.52-11.37,19.46,0,6.87,2.54,12.39,7.62,16.58,5.08,4.19,13.28,7.62,24.6,10.3l32.63,7.49c18.9,4.37,32.98,11.1,42.25,20.19,9.27,9.09,13.91,20.91,13.91,35.43,0,12.3-3.54,23.25-10.63,32.83-7.09,9.58-16.94,17.09-29.55,22.53-12.62,5.44-27.21,8.16-43.79,8.16-23,0-41.77-4.92-56.3-14.78-14.53-9.85-23.45-23.87-26.74-42.05l38.64-5.88c2.41,10.07,7.35,17.67,14.84,22.8,7.49,5.13,17.25,7.69,29.29,7.69,13.1,0,23.58-2.74,31.42-8.22,7.84-5.48,11.77-12.19,11.77-20.12,0-6.42-2.39-11.81-7.15-16.18-4.77-4.37-12.06-7.67-21.86-9.89l-34.77-7.62c-19.17-4.37-33.32-11.32-42.46-20.86-9.14-9.54-13.71-21.62-13.71-36.24,0-12.12,3.39-22.73,10.16-31.82,6.77-9.09,16.13-16.2,28.08-21.33,11.95-5.12,25.63-7.69,41.05-7.69,22.2,0,39.67,4.79,52.42,14.38,12.75,9.58,21.17,22.4,25.27,38.44Z"/>
+        <path d="M1201.49,205.22v32.09h-112.19v-32.09h112.19ZM1119.38,156.01h39.98v194.29c0,7.75,1.16,13.57,3.48,17.45,2.32,3.88,5.33,6.51,9.03,7.89,3.7,1.38,7.73,2.07,12.1,2.07,3.21,0,6.02-.22,8.42-.67,2.41-.45,4.28-.8,5.62-1.07l7.22,33.03c-2.32.89-5.62,1.8-9.9,2.74-4.28.94-9.63,1.45-16.05,1.54-10.52.18-20.33-1.69-29.42-5.62-9.09-3.92-16.45-9.98-22.06-18.19-5.62-8.2-8.42-18.5-8.42-30.89v-202.58Z"/>
+        <path d="M1226.6,410.61V136.75h39.98v101.76h2.41c2.32-4.28,5.66-9.23,10.03-14.84,4.37-5.62,10.43-10.54,18.19-14.78,7.76-4.23,18.01-6.35,30.75-6.35,16.58,0,31.38,4.19,44.39,12.57,13.01,8.38,23.24,20.46,30.69,36.24,7.44,15.78,11.17,34.77,11.17,56.96s-3.7,41.21-11.1,57.03c-7.4,15.82-17.56,27.99-30.49,36.5-12.93,8.51-27.68,12.77-44.26,12.77-12.48,0-22.67-2.1-30.55-6.29-7.89-4.19-14.06-9.09-18.52-14.71-4.46-5.62-7.89-10.61-10.3-14.98h-3.34v31.96h-39.04ZM1265.78,307.91c0,14.44,2.09,27.1,6.29,37.98,4.19,10.88,10.25,19.37,18.19,25.47,7.93,6.11,17.65,9.16,29.15,9.16s21.93-3.19,29.95-9.56c8.02-6.37,14.11-15.04,18.25-26.01s6.22-23.31,6.22-37.04-2.03-25.72-6.08-36.5c-4.06-10.79-10.12-19.3-18.19-25.54-8.07-6.24-18.12-9.36-30.15-9.36s-21.37,2.99-29.35,8.96c-7.98,5.97-14.02,14.31-18.12,25-4.1,10.7-6.15,23.18-6.15,37.44Z"/>
+        <path d="M1499.94,415.15c-13.02,0-24.78-2.43-35.3-7.29-10.52-4.86-18.83-11.92-24.94-21.19-6.11-9.27-9.16-20.64-9.16-34.1,0-11.59,2.23-21.13,6.69-28.62,4.46-7.49,10.47-13.42,18.05-17.78,7.58-4.37,16.05-7.67,25.41-9.9,9.36-2.23,18.9-3.92,28.62-5.08,12.3-1.42,22.28-2.61,29.95-3.54,7.67-.94,13.24-2.47,16.71-4.61,3.48-2.14,5.21-5.62,5.21-10.43v-.94c0-11.68-3.28-20.73-9.83-27.15-6.55-6.42-16.29-9.63-29.22-9.63s-24.05,2.96-31.76,8.89c-7.71,5.93-13.04,12.5-15.98,19.72l-37.58-8.56c4.46-12.48,10.99-22.58,19.59-30.29,8.6-7.71,18.52-13.33,29.75-16.85,11.23-3.52,23.04-5.28,35.44-5.28,8.2,0,16.92.96,26.14,2.88,9.23,1.92,17.87,5.42,25.94,10.5,8.07,5.08,14.69,12.33,19.86,21.73,5.17,9.41,7.75,21.59,7.75,36.57v136.39h-39.04v-28.08h-1.6c-2.59,5.17-6.46,10.25-11.63,15.24-5.17,4.99-11.81,9.14-19.92,12.44-8.11,3.3-17.83,4.95-29.15,4.95ZM1508.64,383.06c11.05,0,20.53-2.18,28.42-6.55,7.89-4.37,13.91-10.1,18.05-17.18s6.22-14.69,6.22-22.8v-26.48c-1.43,1.43-4.17,2.74-8.22,3.94-4.06,1.2-8.67,2.23-13.84,3.08-5.17.85-10.21,1.6-15.11,2.27-4.9.67-9,1.23-12.3,1.67-7.76.98-14.82,2.63-21.19,4.95-6.37,2.32-11.46,5.64-15.24,9.96-3.79,4.33-5.68,10.05-5.68,17.18,0,9.9,3.65,17.36,10.96,22.4,7.31,5.04,16.62,7.56,27.95,7.56Z"/>
+        <path d="M1782.07,255.36l-36.24,6.42c-1.52-4.63-3.9-9.05-7.15-13.24-3.25-4.19-7.64-7.62-13.17-10.3-5.53-2.67-12.44-4.01-20.73-4.01-11.32,0-20.77,2.52-28.35,7.55-7.58,5.04-11.37,11.52-11.37,19.46,0,6.87,2.54,12.39,7.62,16.58,5.08,4.19,13.28,7.62,24.6,10.3l32.63,7.49c18.9,4.37,32.98,11.1,42.25,20.19,9.27,9.09,13.91,20.91,13.91,35.43,0,12.3-3.54,23.25-10.63,32.83-7.09,9.58-16.94,17.09-29.55,22.53-12.62,5.44-27.21,8.16-43.79,8.16-23,0-41.77-4.92-56.29-14.78-14.53-9.85-23.45-23.87-26.74-42.05l38.64-5.88c2.41,10.07,7.35,17.67,14.84,22.8,7.49,5.13,17.25,7.69,29.28,7.69,13.1,0,23.58-2.74,31.42-8.22,7.84-5.48,11.77-12.19,11.77-20.12,0-6.42-2.39-11.81-7.15-16.18-4.77-4.37-12.06-7.67-21.86-9.89l-34.77-7.62c-19.17-4.37-33.32-11.32-42.46-20.86-9.14-9.54-13.71-21.62-13.71-36.24,0-12.12,3.39-22.73,10.16-31.82,6.77-9.09,16.13-16.2,28.08-21.33,11.95-5.12,25.63-7.69,41.05-7.69,22.2,0,39.67,4.79,52.42,14.38,12.75,9.58,21.17,22.4,25.27,38.44Z"/>
+        <path d="M1899.63,414.75c-20.24,0-37.64-4.35-52.22-13.04s-25.81-20.95-33.7-36.77c-7.89-15.82-11.83-34.39-11.83-55.69s3.95-39.58,11.83-55.63c7.89-16.05,18.94-28.57,33.16-37.57,14.22-9,30.87-13.51,49.94-13.51,11.59,0,22.82,1.92,33.7,5.75,10.88,3.83,20.64,9.85,29.28,18.05,8.65,8.2,15.47,18.83,20.46,31.89,4.99,13.06,7.49,28.91,7.49,47.54v14.17h-163.27v-29.95h124.09c0-10.52-2.14-19.86-6.42-28.01-4.28-8.16-10.28-14.6-17.99-19.32-7.71-4.72-16.74-7.09-27.08-7.09-11.23,0-21.02,2.74-29.35,8.22-8.34,5.48-14.75,12.62-19.26,21.4-4.5,8.78-6.75,18.3-6.75,28.55v23.4c0,13.73,2.43,25.41,7.29,35.03,4.86,9.63,11.65,16.96,20.39,22,8.74,5.04,18.94,7.56,30.62,7.56,7.58,0,14.49-1.09,20.73-3.28,6.24-2.18,11.63-5.46,16.18-9.83,4.55-4.37,8.02-9.76,10.43-16.18l37.84,6.82c-3.03,11.14-8.45,20.88-16.25,29.22-7.8,8.34-17.56,14.8-29.28,19.39-11.72,4.59-25.07,6.89-40.05,6.89Z"/>
+      </g>
+      <g class="mark">
+        <polygon opacity=".75" points="299.52 444.72 112.27 314.54 112.27 232.89 299.52 356.91 299.52 444.72"/>
+        <polygon opacity=".85" points="299.52 103.57 112.27 227.59 112.27 312.88 299.52 188.86 299.52 103.57"/>
+        <polygon opacity=".95" points="299.52 356.91 299.52 188.86 418.93 272.89 299.52 356.91"/>
+      </g>
+    </svg>
+  </a>
+  <span class="nav-divider"></span>
+  <span class="nav-title">SLO Performance · <b>Live Data</b></span>
+  <span class="nav-spacer"></span>
+  <span class="nav-status loading" id="status">
+    <span class="dot"></span>
+    <span id="statusText">Loading…</span>
+  </span>
+  <button class="nav-btn ghost" id="refreshBtn" title="Refresh data from sheet">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Refresh
+  </button>
+</nav>
+
+<section class="sub-head">
+  <div class="sub-head-inner">
+    <div class="pageTitle">
+      <h1>Global SLO Performance</h1>
+      <span class="updated" id="lastUpdated">Connecting to source…</span>
+    </div>
+    <div class="summary" id="summary"></div>
+  </div>
+</section>
+
+<main>
+  <svg id="globe" aria-label="Interactive globe"></svg>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="controls">
+  <button data-view="globe" class="active">Globe</button>
+  <button data-view="flat">Flat map</button>
+  <button data-spin="toggle">Auto-rotate</button>
+</div>
+
+<div class="legend">
+  <strong>SLO Performance</strong>
+  <div class="legend-row"><span class="legend-dot legend-good"></span>≥ 95% — On target</div>
+  <div class="legend-row"><span class="legend-dot legend-warn"></span>90 – 94.9% — Watch</div>
+  <div class="legend-row"><span class="legend-dot legend-bad"></span>&lt; 90% — At risk</div>
+  <div class="legend-hint">
+    <svg class="ico sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>
+    Warehouse · Click any pin, country, or region for detail
+  </div>
+</div>
+
+<div class="floating-pill">Drag · Scroll · Click</div>
+
+<aside class="panel" id="panel" aria-hidden="true">
+  <div class="panel-head">
+    <button class="panel-close" id="closePanel" aria-label="Close">×</button>
+    <div class="panel-region-name" id="regionName"></div>
+    <div class="panel-region-sub" id="regionSub"></div>
+    <div class="panel-pillrow" id="regionPills"></div>
+  </div>
+  <div id="metricsBody"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Configuration
+============================================================ */
+const SHEET_ID = "1Qq1GVJA_8ndkmhYz4Mw29TU7coqazvSgxxA0w_UGyWc";
+const GID = "1927880447";
+const GID_CTH_AVG = "1126348404";
+const SLO_GOAL = 95;
+
+/* Sheet's native regions — what we pull data for. */
+const SOURCE_REGION_KEYS = ["Global", "US", "UK", "EU", "India", "APAC", "Canada", "LATAM"];
+
+/* Public-facing display regions — what the map and drilldowns show.
+   `sheetSources` lists which source regions feed each display region (for aggregation). */
+const DISPLAY_REGIONS = {
+  NA:    { label: "North America",
+           sub: "United States & Canada",
+           centroid: [-100, 45],
+           countries: ["US","CA"],
+           sheetSources: ["US","Canada"] },
+  LATAM: { label: "Latin America",
+           sub: "Mexico, Brazil, Argentina & broader LATAM",
+           centroid: [-60, -15],
+           countries: ["MX","AR","BR","CL","CO","CR","GT"],
+           sheetSources: ["LATAM"] },
+  EU:    { label: "Europe",
+           sub: "United Kingdom + 27 European countries",
+           centroid: [10, 50],
+           countries: ["UK","AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE"],
+           sheetSources: ["EU","UK"] },
+  APAC:  { label: "Asia-Pacific",
+           sub: "India, Japan, Australia & broader APAC",
+           centroid: [110, 10],
+           countries: ["IN","JP","MY","PH","SG","KR","NZ","AU"],
+           sheetSources: ["APAC","India"] },
+  ME:    { label: "Middle East",
+           sub: "United Arab Emirates & Israel",
+           centroid: [48, 28],
+           countries: ["AE","IL"],
+           sheetSources: [] }
+};
+
+const COUNTRY_NAMES = {
+  US:"United States", CA:"Canada",
+  MX:"Mexico", AR:"Argentina", BR:"Brazil", CL:"Chile", CO:"Colombia", CR:"Costa Rica", GT:"Guatemala",
+  UK:"United Kingdom", AT:"Austria", BE:"Belgium", BG:"Bulgaria", HR:"Croatia", CY:"Cyprus",
+  CZ:"Czechia", DK:"Denmark", EE:"Estonia", FI:"Finland", FR:"France", DE:"Germany",
+  GR:"Greece", HU:"Hungary", IE:"Ireland", IT:"Italy", LV:"Latvia", LT:"Lithuania",
+  LU:"Luxembourg", MT:"Malta", NL:"Netherlands", PL:"Poland", PT:"Portugal", RO:"Romania",
+  SK:"Slovakia", SI:"Slovenia", ES:"Spain", SE:"Sweden",
+  IN:"India", JP:"Japan", MY:"Malaysia", PH:"Philippines", SG:"Singapore",
+  KR:"South Korea", NZ:"New Zealand", AU:"Australia",
+  AE:"United Arab Emirates", IL:"Israel"
+};
+
+/* Reverse lookup: country code → display region key */
+const COUNTRY_TO_REGION = (() => {
+  const m = {};
+  for (const [region, meta] of Object.entries(DISPLAY_REGIONS)) {
+    for (const c of meta.countries) m[c] = region;
+  }
+  return m;
+})();
+
+/* Warehouse cities (city-level pins on the map) */
+const WAREHOUSES = [
+  { city: "Salt Lake City",  country: "US", coords: [-111.8910, 40.7608], region: "NA" },
+  { city: "Markham",         country: "CA", coords: [ -79.3370, 43.8561], region: "NA" },
+  { city: "Mexico City",     country: "MX", coords: [ -99.1332, 19.4326], region: "LATAM" },
+  { city: "Guatemala City",  country: "GT", coords: [ -90.5069, 14.6349], region: "LATAM" },
+  { city: "San José",        country: "CR", coords: [ -84.0907,  9.9281], region: "LATAM" },
+  { city: "Buenos Aires",    country: "AR", coords: [ -58.3816,-34.6037], region: "LATAM" },
+  { city: "São Paulo",       country: "BR", coords: [ -46.6333,-23.5505], region: "LATAM" },
+  { city: "Santiago",        country: "CL", coords: [ -70.6693,-33.4489], region: "LATAM" },
+  { city: "Bogotá",          country: "CO", coords: [ -74.0721,  4.7110], region: "LATAM" },
+  { city: "Berlin",          country: "DE", coords: [  13.4050, 52.5200], region: "EU" },
+  { city: "Coventry",        country: "UK", coords: [  -1.5197, 52.4068], region: "EU" },
+  { city: "Chennai",         country: "IN", coords: [  80.2707, 13.0827], region: "APAC" },
+  { city: "Tokyo",           country: "JP", coords: [ 139.6503, 35.6762], region: "APAC" },
+  { city: "Kuala Lumpur",    country: "MY", coords: [ 101.6869,  3.1390], region: "APAC" },
+  { city: "Manila",          country: "PH", coords: [ 120.9842, 14.5995], region: "APAC" },
+  { city: "Singapore",       country: "SG", coords: [ 103.8198,  1.3521], region: "APAC" },
+  { city: "Seoul",           country: "KR", coords: [ 126.9780, 37.5665], region: "APAC" },
+  { city: "Auckland",        country: "NZ", coords: [ 174.7633,-36.8485], region: "APAC" },
+  { city: "Sydney",          country: "AU", coords: [ 151.2093,-33.8688], region: "APAC" },
+  { city: "Haifa",           country: "IL", coords: [  34.9896, 32.7940], region: "ME" },
+  { city: "Dubai",           country: "AE", coords: [  55.2708, 25.2048], region: "ME" }
+];
+
+/* Volume threshold below which we mask the count to avoid exposing low absolute numbers */
+const VOLUME_MASK_THRESHOLD = 50;
+
+/* Back-compat alias — old code references REGION_META in places we haven't yet refactored. */
+const REGION_META = DISPLAY_REGIONS;
+
+/* ============================================================
+   Icon / badge helpers (emoji-free, enterprise grade)
+============================================================ */
+const REGION_BADGE_TEXT = {
+  Global: "GLOBAL", NA: "NA", LATAM: "LATAM", EU: "EU", APAC: "APAC", ME: "ME"
+};
+function regionBadge(key, overrideText) {
+  const text = overrideText || REGION_BADGE_TEXT[key] || (key || "").toUpperCase();
+  const cls = key === "Global" ? "global" : (key || "").toLowerCase();
+  return `<span class="region-badge ${cls}">${text}</span>`;
+}
+function iconGlobe(extraCls = "") {
+  return `<svg class="ico ${extraCls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 4 6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-6-4-9s1.5-6.4 4-9z"/></svg>`;
+}
+function iconBox(extraCls = "") {
+  return `<svg class="ico ${extraCls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>`;
+}
+function iconTruck(extraCls = "") {
+  return `<svg class="ico ${extraCls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="6.5" width="12" height="10" rx="1.5"/><path d="M13.5 9.5h5l3 3v4h-8"/><circle cx="6" cy="18.5" r="1.8"/><circle cx="17.5" cy="18.5" r="1.8"/></svg>`;
+}
+function iconPin(extraCls = "") {
+  return `<svg class="ico ${extraCls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4-5-7-8.5-7-12a7 7 0 0 1 14 0c0 3.5-3 7-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+}
+
+const METRIC_DEFS = {
+  cth: {
+    title: "Click-to-Home", short: "CTH", priority: 1,
+    desc: "Order approved → delivered to recipient",
+    slo: { range: "5–8 business days", goal: "95%" }
+  },
+  dts: {
+    title: "Dock-to-Stock", short: "DTS", priority: 2,
+    desc: "Item received in warehouse → terminal state (returns)",
+    slo: { range: "14–30 days by region", goal: "95%" }
+  },
+  cts: {
+    title: "Click-to-Ship", short: "CTS", priority: 3,
+    desc: "Order approved → shipped from warehouse",
+    slo: { range: "1–3 business days", goal: "95%" }
+  }
+};
+
+/* Will be populated from the sheet */
+let DATA = null;
+
+/* ============================================================
+   gviz JSONP loader  (bypasses null-origin CORS)
+============================================================ */
+// Cell helpers: gviz cells are { v: rawValue, f: formattedString } | null
+function cellStr(c) {
+  if (!c) return "";
+  if (c.v == null) return "";
+  return String(c.v).trim();
+}
+function cellPct(c) {
+  // Returns 0-100 number or null. Sheet stores percentages as decimals (0.95).
+  if (!c) return null;
+  const v = c.v;
+  if (v == null || v === "" || v === "---" || v === "#DIV/0!" || v === "#N/A") return null;
+  if (typeof v === "number") return v <= 1.5 ? v * 100 : v; // decimals -> %
+  if (typeof v === "string") {
+    if (!v.trim()) return null;
+    const m = v.match(/(-?\d+(?:\.\d+)?)\s*%?/);
+    if (!m) return null;
+    const n = parseFloat(m[1]);
+    return v.includes("%") || n > 1.5 ? n : n * 100;
+  }
+  return null;
+}
+
+function fetchSheetJSONP(gid = GID, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    const cb = "fbgviz_" + Math.random().toString(36).slice(2);
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq` +
+      `?tqx=out:json;responseHandler:${cb};reqId:0` +
+      `&gid=${gid}&headers=0&_=${Date.now()}`;
+    const script = document.createElement("script");
+    let done = false;
+    const cleanup = () => {
+      if (done) return; done = true;
+      try { delete window[cb]; } catch (_) { window[cb] = undefined; }
+      script.remove();
+      clearTimeout(timer);
+    };
+    window[cb] = (payload) => {
+      cleanup();
+      if (!payload || payload.status !== "ok") {
+        reject(new Error("gviz status: " + (payload && payload.status)));
+        return;
+      }
+      resolve(payload);
+    };
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Script load failed (network/blocked)"));
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timed out after ${timeoutMs/1000}s`));
+    }, timeoutMs);
+    script.src = url;
+    script.async = true;
+    document.head.appendChild(script);
+  });
+}
+
+function findSummaryColumnsJSON(rows) {
+  // Look in the first ~10 rows for cells with "Final" / "YTD" text values.
+  let finalCol = null, ytdCol = null;
+  for (let r = 0; r < Math.min(12, rows.length); r++) {
+    const cells = rows[r].c || [];
+    for (let c = 0; c < cells.length; c++) {
+      const v = cellStr(cells[c]);
+      if (v === "Final" && finalCol == null) finalCol = c;
+      if (v === "YTD" && ytdCol == null) ytdCol = c;
+    }
+    if (finalCol != null && ytdCol != null) break;
+  }
+  return { finalCol, ytdCol };
+}
+
+function rolling3wAvgJSON(cells, weeklyStart, weeklyEnd) {
+  const vals = [];
+  for (let c = weeklyEnd; c >= weeklyStart && vals.length < 3; c--) {
+    const pv = cellPct(cells[c]);
+    if (pv != null) vals.push(pv);
+  }
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+/* Merge data from the CTH Averages tab (pivot + reference table).
+   Sets per-region: cth.avgDays (3-week pivot total) and cth.sloDaysLabel (e.g. "5-8"). */
+function mergeCTHAverages(data, payload) {
+  if (!payload || !payload.table) return;
+  const rows = payload.table.rows || [];
+
+  const totalToRegion = {
+    "US Total": "US", "UK Total": "UK", "EU Total": "EU",
+    "Canada Total": "Canada", "India Total": "India",
+    "APAC Total": "APAC", "LATAM Total": "LATAM",
+    "Grand Total": "Global"
+  };
+  const geoToRegion = {
+    "US": "US", "UK": "UK", "EU": "EU", "CA": "Canada",
+    "IN": "India", "APAC": "APAC", "LATAM": "LATAM"
+  };
+
+  // Region averages — from pivot. Look for "X Total" rows in col 0,
+  // then take the rightmost numeric cell within cols 2..10 (Grand Total col).
+  for (const r of rows) {
+    const cells = r.c || [];
+    const c0 = cellStr(cells[0]);
+    const region = totalToRegion[c0];
+    if (!region || !data[region]) continue;
+    let avg = null;
+    for (let j = Math.min(10, cells.length - 1); j >= 2; j--) {
+      const c = cells[j];
+      if (c && typeof c.v === "number") { avg = c.v; break; }
+    }
+    if (avg != null) data[region].cth.avgDays = avg;
+  }
+
+  // Region SLO ranges — from right reference table at cols 7-9.
+  // Use cell.f (formatted) since ranges like "5-8" get auto-coerced to dates in cell.v.
+  for (let i = 0; i < Math.min(15, rows.length); i++) {
+    const cells = rows[i].c || [];
+    const geo = cellStr(cells[7]);
+    const region = geoToRegion[geo];
+    if (!region || !data[region]) continue;
+    const slo = cells[8];
+    if (!slo) continue;
+    const label = (slo.f || slo.v || "").toString().trim();
+    if (label) data[region].cth.sloDaysLabel = label;
+  }
+  // Global has no single SLO target; use the standard CTH window (5–8 days)
+  // — matches Firstbase's published SLO outside a few remote-region exceptions.
+  if (data.Global) data.Global.cth.sloDaysLabel = data.Global.cth.sloDaysLabel || "5–8";
+}
+
+/* For each multi-source display region (NA, EU, APAC), combine the per-source-region
+   CTH avg days and SLO range labels that mergeCTHAverages set on sourceData. */
+function mergeCTHAveragesForDisplay(displayData, sourceData) {
+  for (const [regionKey, region] of Object.entries(displayData)) {
+    if (regionKey === "Global") continue;
+    const meta = DISPLAY_REGIONS[regionKey];
+    if (!meta || !meta.sheetSources.length) continue;
+    const sources = meta.sheetSources.map(k => sourceData[k]).filter(Boolean);
+
+    // Volume-weighted avg days
+    const weights = sources.map(s => s.volume?.ytd || 0);
+    const totalW = weights.reduce((a, b) => a + b, 0);
+    let avgDays = null;
+    if (totalW) {
+      let acc = 0, used = 0;
+      sources.forEach((s, i) => {
+        const v = s.cth?.avgDays;
+        if (v != null) { acc += v * weights[i]; used += weights[i]; }
+      });
+      avgDays = used ? acc / used : null;
+    } else {
+      const vals = sources.map(s => s.cth?.avgDays).filter(v => v != null);
+      avgDays = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    }
+
+    // Union of SLO day ranges across sources
+    let minD = Infinity, maxD = -Infinity;
+    for (const s of sources) {
+      const rng = parseSloRange(s.cth?.sloDaysLabel);
+      if (rng) { minD = Math.min(minD, rng.min); maxD = Math.max(maxD, rng.max); }
+    }
+    const sloLabel = (minD !== Infinity)
+      ? (minD === maxD ? String(minD) : `${minD}–${maxD}`)
+      : null;
+
+    region.cth.avgDays = avgDays;
+    region.cth.sloDaysLabel = sloLabel;
+  }
+  // ME default — Firstbase standard CTH window, since the sheet doesn't track ME yet
+  if (displayData.ME && displayData.ME.cth.sloDaysLabel == null) {
+    displayData.ME.cth.sloDaysLabel = "5–8";
+  }
+}
+
+/* Read a raw numeric count cell (volume rows store integer counts, not percentages). */
+function cellCount(c) {
+  if (!c) return null;
+  const v = c.v;
+  if (v == null || v === "" || v === "---") return null;
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const n = parseFloat(v.replace(/,/g, ""));
+    return isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+function extractDataFromJSON(payload) {
+  const tbl = payload.table;
+  if (!tbl || !Array.isArray(tbl.rows)) throw new Error("Malformed gviz table");
+  const rows = tbl.rows;
+
+  let { finalCol, ytdCol } = findSummaryColumnsJSON(rows);
+  if (finalCol == null || ytdCol == null) {
+    const colCount = (tbl.cols || []).length || (rows[0]?.c || []).length || 143;
+    ytdCol = colCount - 1;
+    finalCol = colCount - 2;
+    console.warn("Final/YTD labels not found — falling back to last-2 columns:", { finalCol, ytdCol, colCount });
+  }
+  const weeklyStart = 2;
+  const weeklyEnd = Math.max(weeklyStart, finalCol - 36);
+
+  // Find region anchors (col 0 == sheet region key).
+  const anchors = [];
+  for (let r = 0; r < rows.length; r++) {
+    const k = cellStr((rows[r].c || [])[0]);
+    if (SOURCE_REGION_KEYS.includes(k)) anchors.push({ key: k, row: r });
+  }
+
+  /* For each region anchor, find indices of:
+       - CTS / CTH / DTS % (Net) rows  → SLO percentages
+       - "Items Delivered from WH (Gross)" row → volume (delivered orders)
+       - "Items Shipped from WH (Gross)" row   → shipped count (used as fallback) */
+  function findRowsForRegion(start, end) {
+    const found = { cts: null, cth: null, dts: null, delivered: null, shipped: null, returns: null };
+    for (let r = start; r < end; r++) {
+      const lab = cellStr((rows[r].c || [])[1]);
+      if (lab === "CTS % (Net)" && found.cts == null) found.cts = r;
+      else if (lab === "CTH % (Net)" && found.cth == null) found.cth = r;
+      else if (lab === "DTS % (Net)" && found.dts == null) found.dts = r;
+      else if (lab === "Items Delivered from WH (Gross)" && found.delivered == null) found.delivered = r;
+      else if (lab === "Items Shipped from WH (Gross)" && found.shipped == null) found.shipped = r;
+      else if (lab === "Returns Completed (Gross)" && found.returns == null) found.returns = r;
+    }
+    return found;
+  }
+  const regions = {};
+  for (let i = 0; i < anchors.length; i++) {
+    const a = anchors[i];
+    const nextA = anchors[i + 1];
+    const nextRow = nextA ? nextA.row : rows.length;
+    const win = Math.min(nextRow, a.row + 50);
+    const m = findRowsForRegion(a.row, win);
+    if (m.cth != null && !regions[a.key]) regions[a.key] = { anchor: a.row, ...m };
+  }
+
+  const out = {};
+  for (const key of SOURCE_REGION_KEYS) {
+    const r = regions[key];
+    const region = { key };
+    if (!r) {
+      region.cts = region.cth = region.dts = { rolling3w: null, ytd: null, previousFY: null };
+      region.volume = { ytd: null, previousFY: null };
+      out[key] = region;
+      continue;
+    }
+    for (const metric of ["cts", "cth", "dts"]) {
+      const ri = r[metric];
+      if (ri == null) { region[metric] = { rolling3w: null, ytd: null, previousFY: null }; continue; }
+      const cells = rows[ri].c || [];
+      region[metric] = {
+        rolling3w:  rolling3wAvgJSON(cells, weeklyStart, weeklyEnd),
+        ytd:        cellPct(cells[ytdCol]),
+        previousFY: cellPct(cells[finalCol])
+      };
+    }
+    // Volume = items delivered YTD; fall back to shipped if delivered missing.
+    const volRow = r.delivered != null ? rows[r.delivered].c : (r.shipped != null ? rows[r.shipped].c : null);
+    region.volume = volRow ? {
+      ytd:        cellCount(volRow[ytdCol]),
+      previousFY: cellCount(volRow[finalCol])
+    } : { ytd: null, previousFY: null };
+    out[key] = region;
+  }
+  return out;
+}
+
+/* Aggregate source-region data into the public display regions (NA / LATAM / EU / APAC / ME).
+   Combined % is volume-weighted: sum(pct*vol) / sum(vol). */
+function buildDisplayData(sourceData) {
+  const out = {};
+  // Always carry through Global verbatim — used by the header summary cards.
+  if (sourceData.Global) {
+    out.Global = {
+      key: "Global",
+      label: "Global", sub: "All geographies",
+      centroid: [10, 25],
+      countries: [], sheetSources: ["Global"],
+      cth: { ...sourceData.Global.cth }, dts: { ...sourceData.Global.dts }, cts: { ...sourceData.Global.cts },
+      volume: { ...sourceData.Global.volume }
+    };
+  }
+
+  for (const [regionKey, meta] of Object.entries(DISPLAY_REGIONS)) {
+    const sources = meta.sheetSources.map(k => sourceData[k]).filter(Boolean);
+    const region = { key: regionKey, ...meta };
+
+    if (sources.length === 0) {
+      // ME — no sheet coverage yet
+      region.cth = { rolling3w: null, ytd: null, previousFY: null };
+      region.dts = { rolling3w: null, ytd: null, previousFY: null };
+      region.cts = { rolling3w: null, ytd: null, previousFY: null };
+      region.volume = { ytd: null, previousFY: null };
+      region.hasData = false;
+      out[regionKey] = region;
+      continue;
+    }
+
+    if (sources.length === 1) {
+      const s = sources[0];
+      region.cth = { ...s.cth };
+      region.dts = { ...s.dts };
+      region.cts = { ...s.cts };
+      region.volume = { ...s.volume };
+      region.hasData = (s.cth && s.cth.ytd != null);
+      out[regionKey] = region;
+      continue;
+    }
+
+    // Multiple source regions — aggregate using volume-weighted averaging.
+    const totalVol = sources.reduce((sum, s) => sum + (s.volume?.ytd || 0), 0);
+    const totalVolPrev = sources.reduce((sum, s) => sum + (s.volume?.previousFY || 0), 0);
+    function weightedMetric(metric, key) {
+      // Weight by source-region volume on the same time horizon, where possible.
+      const weights = sources.map(s => (s.volume?.ytd || 0));
+      const totalW = weights.reduce((a, b) => a + b, 0);
+      if (!totalW) {
+        // Volume-less case: simple average of non-null source values.
+        const vals = sources.map(s => s[metric]?.[key]).filter(v => v != null);
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      }
+      let acc = 0, used = 0;
+      sources.forEach((s, i) => {
+        const v = s[metric]?.[key];
+        if (v != null) { acc += v * weights[i]; used += weights[i]; }
+      });
+      return used ? acc / used : null;
+    }
+    for (const metric of ["cts","cth","dts"]) {
+      region[metric] = {
+        rolling3w:  weightedMetric(metric, "rolling3w"),
+        ytd:        weightedMetric(metric, "ytd"),
+        previousFY: weightedMetric(metric, "previousFY")
+      };
+    }
+    region.volume = { ytd: totalVol || null, previousFY: totalVolPrev || null };
+    region.hasData = region.cth.ytd != null;
+    out[regionKey] = region;
+  }
+  return out;
+}
+
+/* ============================================================
+   UI helpers
+============================================================ */
+function tier(pct) {
+  if (pct == null) return "na";
+  if (pct >= 95) return "good";
+  if (pct >= 90) return "warn";
+  return "bad";
+}
+function tierColor(t) {
+  return t === "good" ? "var(--fb-good)" : t === "warn" ? "var(--fb-warn)" : t === "bad" ? "var(--fb-bad)" : "var(--fb-text-3)";
+}
+function tierColorRaw(t) {
+  return t === "good" ? "#16b06a" : t === "warn" ? "#d59024" : t === "bad" ? "#f46e73" : "#74889d";
+}
+function pillLabel(t) {
+  return t === "good" ? "On target" : t === "warn" ? "Watch" : t === "bad" ? "At risk" : "—";
+}
+function fmtPct(v) { return v == null ? "—" : (Math.round(v * 10) / 10).toFixed(1) + "%"; }
+function fmtDays(v) { return v == null ? "—" : (Math.round(v * 10) / 10).toFixed(1); }
+
+/* Parse SLO range labels like "6", "5-8", "8-15", "5–8" → {min, max} */
+function parseSloRange(label) {
+  if (!label) return null;
+  const s = String(label).replace(/[–—]/g, "-").trim();
+  const m = s.match(/(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?/);
+  if (!m) return null;
+  const min = parseFloat(m[1]);
+  const max = m[2] ? parseFloat(m[2]) : min;
+  return { min, max };
+}
+
+/* Render the actuals strip (avg days vs SLO target) */
+function renderActualsStrip(avgDays, sloLabel, metricTitle) {
+  const range = parseSloRange(sloLabel);
+  // Status: under SLO min = beating, within range = on target, over max = miss
+  let status = "warn", statusText = "—";
+  if (range && avgDays != null) {
+    if (avgDays <= range.min) {
+      const pct = Math.round((1 - avgDays / range.max) * 100);
+      status = "beat";
+      statusText = `${pct}% faster than SLO`;
+    } else if (avgDays <= range.max) {
+      status = "warn"; statusText = "Within SLO range";
+    } else {
+      const over = (avgDays - range.max).toFixed(1);
+      status = "miss"; statusText = `+${over}d over SLO`;
+    }
+  }
+
+  // Bar viz: scale to max(SLO max, avg) * 1.3, mark SLO zone, plot actual.
+  let barHtml = "";
+  if (range) {
+    const scale = Math.max(range.max, avgDays || 0) * 1.3 || 10;
+    const zoneStart = (range.min / scale) * 100;
+    const zoneEnd = (range.max / scale) * 100;
+    const actualPos = avgDays != null ? Math.min(99, (avgDays / scale) * 100) : 0;
+    barHtml = `
+      <div class="days-bar">
+        <div class="slo-zone" style="left:${zoneStart}%; right:${100 - zoneEnd}%;"></div>
+        ${avgDays != null ? `<div class="actual-marker" style="left:calc(${actualPos}% - 1.5px);"></div>` : ""}
+      </div>
+      <div class="days-bar-axis"><span>0d</span><span>SLO ${sloLabel} d</span><span>${(scale).toFixed(0)}d</span></div>`;
+  }
+
+  const sloDisplay = sloLabel ? sloLabel + " days" : "—";
+  return `
+    <div class="actuals-strip">
+      <div class="actuals-label">Actuals · ${metricTitle}</div>
+      <div class="actuals-row">
+        <div class="actuals-card actual">
+          <div class="a-label">3-Week Avg</div>
+          <div class="a-value">${fmtDays(avgDays)} <span class="a-unit">days</span></div>
+          <div class="a-foot">Actual delivery time</div>
+        </div>
+        <div class="actuals-card">
+          <div class="a-label">SLO Target</div>
+          <div class="a-value">${sloDisplay}</div>
+          <div class="a-foot">Promised window</div>
+        </div>
+        <span class="vs-pill ${status}">${statusText}</span>
+      </div>
+      ${barHtml}
+    </div>`;
+}
+function fmtDelta(curr, prev) {
+  if (curr == null || prev == null) return "";
+  const d = curr - prev;
+  if (Math.abs(d) < 0.05) return "";
+  const cls = d > 0 ? "up" : "down";
+  const sign = d > 0 ? "▲" : "▼";
+  return `<span class="delta ${cls}">${sign} ${Math.abs(d).toFixed(1)}pp</span>`;
+}
+function setStatus(state, text) {
+  const s = document.getElementById("status");
+  s.classList.remove("loading", "error");
+  if (state !== "ok") s.classList.add(state);
+  document.getElementById("statusText").textContent = text;
+}
+let toastTimer;
+function toast(msg, isError) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.toggle("error", !!isError);
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+/* ============================================================
+   Header summary
+============================================================ */
+function renderSummary() {
+  const container = document.getElementById("summary");
+  if (!DATA) {
+    container.innerHTML = `
+      <div class="summary-group">
+        <div class="summary-group-head"><span class="skeleton">XXXXXXX SUMMARY</span></div>
+        <div class="summary-cards-row">
+          ${Array.from({ length: 2 }).map(() => `
+            <div class="summary-card regional">
+              <div class="scope skeleton">XXXXX</div>
+              <div class="label skeleton">XXXXX XXXXX</div>
+              <div class="value-row"><span class="value skeleton">000.0%</span></div>
+            </div>`).join("")}
+        </div>
+      </div>
+      <div class="summary-group">
+        <div class="summary-group-head"><span class="skeleton">XXXXXXX SUMMARY</span></div>
+        <div class="summary-cards-row">
+          ${Array.from({ length: 2 }).map(() => `
+            <div class="summary-card regional">
+              <div class="scope skeleton">XXXXX</div>
+              <div class="label skeleton">XXXXX XXXXX</div>
+              <div class="value-row"><span class="value skeleton">000.0%</span></div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+    return;
+  }
+
+  const groups = [
+    { id: "Global", region: "Global", title: "Global Performance", groupClass: "global-group", cardClass: "global" },
+    { id: "NA",     region: "NA",     title: "Regional · North America", groupClass: "regional-group", cardClass: "regional" }
+  ];
+  const metricsPerGroup = [
+    { metric: "cth", label: "Click-to-Home YTD" },
+    { metric: "dts", label: "Dock-to-Stock YTD" }
+  ];
+
+  const renderCard = (group, metricDef) => {
+    const m = DATA[group.region]?.[metricDef.metric];
+    if (!m) return "";
+    const v = m.ytd;
+    const t = tier(v);
+    let daysLine = "";
+    if (metricDef.metric === "cth" && m.avgDays != null) {
+      const sloTxt = m.sloDaysLabel ? ` · SLO ${m.sloDaysLabel}d` : "";
+      daysLine = `<div class="footnote days-line">${iconTruck("sm")} ${fmtDays(m.avgDays)}d avg${sloTxt}</div>`;
+    }
+    return `
+      <div class="summary-card ${group.cardClass}">
+        <div class="scope">${regionBadge(group.region, group.region === "NA" ? "NORTH AMERICA" : null)}</div>
+        <div class="label">${metricDef.label}</div>
+        <div class="value-row">
+          <span class="value" style="color:${tierColorRaw(t)}">${fmtPct(v)}</span>
+          <span class="pill ${t}">${pillLabel(t)}</span>
+        </div>
+        <div class="footnote">vs FY25: ${fmtPct(m.previousFY)} ${fmtDelta(v, m.previousFY)}</div>
+        ${daysLine}
+      </div>`;
+  };
+
+  container.innerHTML = groups.map(g => `
+    <div class="summary-group ${g.groupClass}">
+      <div class="summary-group-head">${g.region === "Global" ? iconGlobe("sm") : ""}<span>${g.title}</span><span class="lead-rule"></span></div>
+      <div class="summary-cards-row">
+        ${metricsPerGroup.map(md => renderCard(g, md)).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ============================================================
+   Globe
+============================================================ */
+const svg = d3.select("#globe");
+let width = window.innerWidth;
+let height = window.innerHeight - 188;
+svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+const projection = d3.geoOrthographic()
+  .scale(Math.min(width, height) * 0.42)
+  .translate([width / 2, height / 2])
+  .clipAngle(90);
+const flatProjection = d3.geoNaturalEarth1()
+  .scale(Math.min(width, height) * 0.22)
+  .translate([width / 2, height / 2]);
+let activeProjection = projection;
+let path = d3.geoPath(activeProjection);
+
+const defs = svg.append("defs");
+defs.append("radialGradient").attr("id", "ocean-grad")
+  .selectAll("stop").data([{o:"0%",c:"#eff8ff"},{o:"100%",c:"#dceefb"}]).enter()
+  .append("stop").attr("offset", d=>d.o).attr("stop-color", d=>d.c);
+
+const gOcean = svg.append("g");
+const gGraticule = svg.append("g");
+const gCountries = svg.append("g");
+const gPins = svg.append("g");
+
+const sphere = { type: "Sphere" };
+const graticule = d3.geoGraticule10();
+gOcean.append("path").datum(sphere).attr("class", "ocean").style("fill", "url(#ocean-grad)");
+gGraticule.append("path").datum(graticule).attr("class", "graticule");
+
+/* TopoJSON uses ISO 3166-1 numeric IDs. Map → alpha-3. */
+const NUMERIC_TO_ISO3 = {
+  // North America
+  840:"USA", 124:"CAN",
+  // LATAM
+  484:"MEX", 32:"ARG", 76:"BRA", 152:"CHL", 170:"COL", 188:"CRI", 320:"GTM",
+  // Europe
+  826:"GBR", 40:"AUT", 56:"BEL", 100:"BGR", 191:"HRV", 196:"CYP", 203:"CZE",
+  208:"DNK", 233:"EST", 246:"FIN", 250:"FRA", 276:"DEU", 300:"GRC", 348:"HUN",
+  372:"IRL", 380:"ITA", 428:"LVA", 440:"LTU", 442:"LUX", 470:"MLT", 528:"NLD",
+  616:"POL", 620:"PRT", 642:"ROU", 703:"SVK", 705:"SVN", 724:"ESP", 752:"SWE",
+  // APAC
+  356:"IND", 392:"JPN", 458:"MYS", 608:"PHL", 702:"SGP", 410:"KOR", 554:"NZL", 36:"AUS",
+  // Middle East
+  784:"ARE", 376:"ISR"
+};
+
+/* ISO3 → our display country code */
+const ISO3_TO_COUNTRY = {
+  USA:"US", CAN:"CA",
+  MEX:"MX", ARG:"AR", BRA:"BR", CHL:"CL", COL:"CO", CRI:"CR", GTM:"GT",
+  GBR:"UK", AUT:"AT", BEL:"BE", BGR:"BG", HRV:"HR", CYP:"CY", CZE:"CZ",
+  DNK:"DK", EST:"EE", FIN:"FI", FRA:"FR", DEU:"DE", GRC:"GR", HUN:"HU",
+  IRL:"IE", ITA:"IT", LVA:"LV", LTU:"LT", LUX:"LU", MLT:"MT", NLD:"NL",
+  POL:"PL", PRT:"PT", ROU:"RO", SVK:"SK", SVN:"SI", ESP:"ES", SWE:"SE",
+  IND:"IN", JPN:"JP", MYS:"MY", PHL:"PH", SGP:"SG", KOR:"KR", NZL:"NZ", AUS:"AU",
+  ARE:"AE", ISR:"IL"
+};
+
+/* ISO3 → display-region key (so a clicked country knows its region).
+   Must be declared AFTER ISO3_TO_COUNTRY to avoid a Temporal Dead Zone ReferenceError. */
+const isoToRegion = (() => {
+  const m = {};
+  for (const [iso3, ctry] of Object.entries(ISO3_TO_COUNTRY)) {
+    const region = COUNTRY_TO_REGION[ctry];
+    if (region) m[iso3] = region;
+  }
+  return m;
+})();
+
+let worldFeatures = null;
+function drawCountries() {
+  if (!worldFeatures) return;
+  const sel = gCountries.selectAll("path.country").data(worldFeatures, d => d.id);
+  sel.enter().append("path")
+    .attr("class", d => {
+      const iso = NUMERIC_TO_ISO3[+d.id];
+      return iso && isoToRegion[iso] ? "country country-served" : "country country-base";
+    })
+    .attr("data-region", d => {
+      const iso = NUMERIC_TO_ISO3[+d.id];
+      return iso ? (isoToRegion[iso] || "") : "";
+    })
+    .attr("data-iso", d => NUMERIC_TO_ISO3[+d.id] || "")
+    .on("click", function() {
+      const region = this.getAttribute("data-region");
+      const iso = this.getAttribute("data-iso");
+      if (region) selectRegion(region, ISO3_TO_COUNTRY[iso]);
+    })
+    .on("mouseenter", function(event) {
+      const region = this.getAttribute("data-region");
+      const iso = this.getAttribute("data-iso");
+      if (region) showCountryTooltip(event, region, ISO3_TO_COUNTRY[iso]);
+    })
+    .on("mousemove", positionTooltip)
+    .on("mouseleave", hideTooltip);
+}
+
+/* Draw a warehouse pin per city (21 pins). Color = parent region's CTH tier. */
+function drawPins() {
+  if (!DATA) return;
+  const pins = WAREHOUSES.map(w => ({ ...w, parent: DATA[w.region] })).filter(w => w.parent);
+  const g = gPins.selectAll("g.pin").data(pins, d => d.city);
+  g.exit().remove();
+  const enter = g.enter().append("g").attr("class", "pin")
+    .on("click", (e, d) => selectRegion(d.region, d.country, d.city))
+    .on("mouseenter", (e, d) => showWarehouseTooltip(e, d))
+    .on("mousemove", positionTooltip)
+    .on("mouseleave", hideTooltip);
+  enter.append("circle").attr("class", "pin-shadow").attr("r", 3.6).attr("cy", 1);
+  enter.append("circle").attr("class", "pin-ring").attr("r", 5);
+  enter.append("circle").attr("class", "pin-dot").attr("r", 3.6)
+    .attr("stroke", "white").attr("stroke-width", 1.4);
+  enter.append("circle").attr("class", "pin-core").attr("r", 1.1).attr("fill", "white");
+  // Apply color per parent region's CTH tier
+  gPins.selectAll("g.pin")
+    .each(function(d) {
+      const ytd = d.parent?.cth?.ytd;
+      const t = ytd == null ? "na" : tier(ytd);
+      const color = t === "na" ? "#74889d" : tierColorRaw(t);
+      d3.select(this).attr("color", color);
+      d3.select(this).select(".pin-dot").attr("fill", color);
+    });
+}
+
+let rotation = [-10, -20];
+let autospin = true;
+let lastT = 0;
+d3.timer(t => {
+  if (!autospin) return;
+  const dt = t - lastT;
+  lastT = t;
+  rotation[0] += dt * 0.012;
+  if (activeProjection === projection) projection.rotate(rotation);
+  redraw();
+});
+
+function redraw() {
+  path = d3.geoPath(activeProjection);
+  gOcean.select(".ocean").attr("d", path);
+  gGraticule.select(".graticule").attr("d", path);
+  gCountries.selectAll("path").attr("d", path);
+  gPins.selectAll("g.pin").each(function(d) {
+    const coords = d.coords;
+    const c = activeProjection(coords);
+    const visible = isPointVisible(coords);
+    d3.select(this)
+      .attr("transform", c ? `translate(${c[0]},${c[1]})` : null)
+      .style("display", visible && c ? null : "none");
+  });
+}
+
+function isPointVisible(coord) {
+  if (activeProjection !== projection) return true;
+  const r = projection.rotate();
+  const [lon, lat] = coord;
+  const phi = lat * Math.PI/180;
+  const lambda = (lon + r[0]) * Math.PI/180;
+  const phi0 = -r[1] * Math.PI/180;
+  const cos = Math.sin(phi0)*Math.sin(phi) + Math.cos(phi0)*Math.cos(phi)*Math.cos(lambda);
+  return cos > -0.05;
+}
+
+const drag = d3.drag()
+  .on("start", () => { autospin = false; setSpinBtn(); })
+  .on("drag", (e) => {
+    if (activeProjection !== projection) return;
+    const k = 0.4;
+    rotation[0] += e.dx * k;
+    rotation[1] = Math.max(-80, Math.min(80, rotation[1] - e.dy * k));
+    projection.rotate(rotation);
+    redraw();
+  });
+svg.call(drag);
+
+svg.on("wheel", (e) => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+  activeProjection.scale(Math.max(150, Math.min(2200, activeProjection.scale() * factor)));
+  redraw();
+}, { passive: false });
+
+window.addEventListener("resize", () => {
+  width = window.innerWidth;
+  height = window.innerHeight - 188;
+  svg.attr("viewBox", `0 0 ${width} ${height}`);
+  projection.translate([width/2, height/2]).scale(Math.min(width, height) * 0.42);
+  flatProjection.translate([width/2, height/2]).scale(Math.min(width, height) * 0.22);
+  redraw();
+});
+
+/* ============================================================
+   Tooltip
+============================================================ */
+const tooltip = document.getElementById("tooltip");
+function showRegionTooltip(e, regionKey) {
+  if (!DATA) return;
+  const r = DATA[regionKey]; if (!r) return;
+  if (!r.hasData && r.cth?.ytd == null) {
+    tooltip.innerHTML = `
+      <div class="ttl">${regionBadge(regionKey)} ${r.label}</div>
+      <div class="row"><span>Coverage active</span><b>${r.countries?.length || 0} countries</b></div>
+      <div class="hint">Click for warehouse list</div>`;
+  } else {
+    tooltip.innerHTML = `
+      <div class="ttl">${regionBadge(regionKey)} ${r.label}</div>
+      <div class="row"><span>CTH YTD</span><b>${fmtPct(r.cth.ytd)}</b></div>
+      <div class="row"><span>DTS YTD</span><b>${fmtPct(r.dts.ytd)}</b></div>
+      <div class="row"><span>CTS YTD</span><b>${fmtPct(r.cts.ytd)}</b></div>
+      <div class="hint">Click for full breakdown</div>`;
+  }
+  tooltip.classList.add("show");
+  positionTooltip(e);
+}
+function showCountryTooltip(e, regionKey, countryCode) {
+  if (!DATA) return;
+  const r = DATA[regionKey]; if (!r) return;
+  const name = COUNTRY_NAMES[countryCode] || countryCode || "";
+  tooltip.innerHTML = `
+    <div class="ttl">${name}</div>
+    <div class="row"><span>Region</span><b>${regionBadge(regionKey)} ${r.label}</b></div>
+    ${r.cth?.ytd != null ? `<div class="row"><span>Region CTH YTD</span><b>${fmtPct(r.cth.ytd)}</b></div>` : `<div class="row"><span>Coverage</span><b>Active</b></div>`}
+    <div class="hint">Click to view region detail</div>`;
+  tooltip.classList.add("show");
+  positionTooltip(e);
+}
+function showWarehouseTooltip(e, w) {
+  const r = w.parent || {};
+  tooltip.innerHTML = `
+    <div class="ttl">${iconBox()} ${w.city}</div>
+    <div class="row"><span>Warehouse</span><b>${COUNTRY_NAMES[w.country] || w.country}</b></div>
+    <div class="row"><span>Region</span><b>${regionBadge(w.region)} ${r.label || w.region}</b></div>
+    ${r.cth?.ytd != null ? `<div class="row"><span>Region CTH YTD</span><b>${fmtPct(r.cth.ytd)}</b></div>` : ""}
+    <div class="hint">Click to view region detail</div>`;
+  tooltip.classList.add("show");
+  positionTooltip(e);
+}
+function positionTooltip(e) {
+  tooltip.style.left = e.clientX + "px";
+  tooltip.style.top = e.clientY + "px";
+}
+function hideTooltip() { tooltip.classList.remove("show"); }
+
+/* ============================================================
+   Side panel
+============================================================ */
+const panel = document.getElementById("panel");
+document.getElementById("closePanel").addEventListener("click", () => {
+  panel.classList.remove("open");
+  panel.setAttribute("aria-hidden", "true");
+  d3.selectAll("path.country-active").classed("country-active", false);
+});
+
+/* Format a volume count, masking sub-threshold values to "<50". */
+function fmtVolume(v) {
+  if (v == null) return "—";
+  if (v < VOLUME_MASK_THRESHOLD) return `<${VOLUME_MASK_THRESHOLD}`;
+  return v.toLocaleString();
+}
+
+function selectRegion(key, focusCountry, focusCity) {
+  if (!DATA) return;
+  const r = DATA[key];
+  if (!r) return;
+
+  document.getElementById("regionName").innerHTML = `${regionBadge(key)} ${r.label}`;
+  let subText = r.sub;
+  if (focusCity) {
+    subText = `${focusCity} warehouse · ${r.label}`;
+  } else if (focusCountry) {
+    subText = `${COUNTRY_NAMES[focusCountry] || focusCountry} · part of ${r.label}`;
+  }
+  document.getElementById("regionSub").textContent = subText;
+
+  if (r.hasData !== false && r.cth?.ytd != null) {
+    document.getElementById("regionPills").innerHTML = `
+      <span class="pill ${tier(r.cth.ytd)}">CTH ${fmtPct(r.cth.ytd)}</span>
+      <span class="pill ${tier(r.dts.ytd)}">DTS ${fmtPct(r.dts.ytd)}</span>
+      <span class="pill ${tier(r.cts.ytd)}">CTS ${fmtPct(r.cts.ytd)}</span>`;
+  } else {
+    document.getElementById("regionPills").innerHTML =
+      `<span class="pill warn">Coverage active · SLO reporting forthcoming</span>`;
+  }
+
+  d3.selectAll("path.country-active").classed("country-active", false);
+  d3.selectAll(`path[data-region="${key}"]`).classed("country-active", true);
+
+  // Top of body: Volume + coverage strip
+  const warehousesForRegion = WAREHOUSES.filter(w => w.region === key);
+  const hasData = r.hasData !== false && r.cth?.ytd != null;
+  const volumeBlock = `
+    <div class="region-stats">
+      <div class="stat-card volume ${hasData ? "" : "muted"}">
+        <div class="stat-label">YTD Order Volume</div>
+        <div class="stat-value">${hasData ? fmtVolume(r.volume?.ytd) : `<${VOLUME_MASK_THRESHOLD}`}</div>
+        <div class="stat-foot">${hasData && r.volume?.previousFY ? `FY25: ${fmtVolume(r.volume.previousFY)}` : "Volume below SLO reporting threshold"}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Countries Served</div>
+        <div class="stat-value">${r.countries?.length || 0}</div>
+        <div class="stat-foot">${r.countries?.slice(0,4).map(c => COUNTRY_NAMES[c] || c).join(", ")}${(r.countries?.length || 0) > 4 ? "…" : ""}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Warehouses</div>
+        <div class="stat-value">${warehousesForRegion.length}</div>
+        <div class="stat-foot">${warehousesForRegion.slice(0,3).map(w => w.city).join(", ")}${warehousesForRegion.length > 3 ? "…" : ""}</div>
+      </div>
+    </div>`;
+
+  // Empty-state for regions with no SLO data
+  if (!hasData) {
+    const ctyList = (r.countries || []).map(c =>
+      `<span class="country-chip">${COUNTRY_NAMES[c] || c}</span>`).join("");
+    const whList = warehousesForRegion.map(w =>
+      `<div class="wh-item"><span class="wh-pin">${iconBox()}</span><div><b>${w.city}</b><span class="wh-country">${COUNTRY_NAMES[w.country] || w.country}</span></div></div>`).join("");
+    document.getElementById("metricsBody").innerHTML = `
+      ${volumeBlock}
+      <div class="metric-block">
+        <div class="metric-head">
+          <div class="metric-title-row">
+            <div>
+              <div class="metric-title">Coverage</div>
+              <div class="metric-desc">Firstbase is live in this region. SLO-tracked volume hasn't yet crossed the reporting threshold.</div>
+            </div>
+          </div>
+        </div>
+        <div class="region-extras">
+          <div class="extras-head">Countries served</div>
+          <div class="country-chips">${ctyList}</div>
+          <div class="extras-head">Warehouses</div>
+          <div class="wh-list">${whList}</div>
+        </div>
+      </div>`;
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+    if (activeProjection === projection) {
+      autospin = false; setSpinBtn();
+      const target = [-r.centroid[0], -r.centroid[1]];
+      d3.transition().duration(900).tween("rotate", () => {
+        const interp = d3.interpolate(rotation, target);
+        return tt => { rotation = interp(tt); projection.rotate(rotation); redraw(); };
+      });
+    }
+    return;
+  }
+
+  const order = ["cth", "dts", "cts"];
+  const html = order.map(m => {
+    const def = METRIC_DEFS[m];
+    const v = r[m];
+    const cells = [
+      { lab: "Rolling 3W", val: v.rolling3w, foot: "Recent trend" },
+      { lab: "Current YTD", val: v.ytd, foot: "FY 2026 to date" },
+      { lab: "Previous FY", val: v.previousFY, foot: "FY 2025 final" }
+    ];
+    const cellsHtml = cells.map(c => {
+      const t = tier(c.val);
+      const isYtd = c.lab === "Current YTD";
+      return `<div class="metric-cell">
+        <div class="cell-label">${c.lab}</div>
+        <div class="cell-value" style="color:${tierColorRaw(t)}">
+          ${fmtPct(c.val)}
+          ${isYtd ? fmtDelta(c.val, v.previousFY) : ""}
+        </div>
+        <div class="cell-foot">${c.foot}</div>
+      </div>`;
+    }).join("");
+    const bars = cells.map(c => {
+      const w = c.val == null ? 0 : Math.max(0, Math.min(100, c.val));
+      return `<div class="bar-row">
+        <span class="bar-row-label">${c.lab}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${w}%; background:${tierColorRaw(tier(c.val))};"></div></div>
+        <span class="bar-row-value">${fmtPct(c.val)}</span>
+      </div>`;
+    }).join("");
+
+    // Actuals strip (CTH only for now — CTS/DTS will follow)
+    const actualsHtml = (m === "cth" && v.avgDays != null)
+      ? renderActualsStrip(v.avgDays, v.sloDaysLabel, "Click-to-Home")
+      : "";
+
+    // Region-specific SLO text in head pill (for CTH if we have a region label)
+    const sloRange = (m === "cth" && v.sloDaysLabel) ? v.sloDaysLabel + " business days" : def.slo.range;
+
+    return `<div class="metric-block ${m}">
+      <div class="metric-head">
+        <div class="metric-title-row">
+          <div>
+            <div class="metric-title">${def.title}<span class="short">(${def.short})</span></div>
+            <div class="metric-desc">${def.desc}</div>
+          </div>
+        </div>
+        <div class="metric-slo">SLO: <b>${sloRange}</b> · Goal <b>${def.slo.goal}</b></div>
+      </div>
+      ${actualsHtml}
+      <div class="metric-grid">${cellsHtml}</div>
+      <div class="bar-block">
+        ${bars}
+        <div class="bar-target-label">↑ 95% SLO goal</div>
+      </div>
+    </div>`;
+  }).join("");
+  const ctyList = (r.countries || []).map(c =>
+    `<span class="country-chip${focusCountry === c ? " active" : ""}">${COUNTRY_NAMES[c] || c}</span>`).join("");
+  const whList = warehousesForRegion.map(w =>
+    `<div class="wh-item${focusCity === w.city ? " active" : ""}"><span class="wh-pin">${iconBox()}</span><div><b>${w.city}</b><span class="wh-country">${COUNTRY_NAMES[w.country] || w.country}</span></div></div>`).join("");
+  const extras = `
+    <div class="metric-block">
+      <div class="region-extras">
+        <div class="extras-head">Countries served (${r.countries?.length || 0})</div>
+        <div class="country-chips">${ctyList}</div>
+        <div class="extras-head">Warehouses (${warehousesForRegion.length})</div>
+        <div class="wh-list">${whList}</div>
+      </div>
+    </div>`;
+
+  document.getElementById("metricsBody").innerHTML = volumeBlock + html + extras;
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+
+  if (activeProjection === projection) {
+    autospin = false; setSpinBtn();
+    const target = [-r.centroid[0], -r.centroid[1]];
+    d3.transition().duration(900).tween("rotate", () => {
+      const interp = d3.interpolate(rotation, target);
+      return tt => {
+        rotation = interp(tt);
+        projection.rotate(rotation);
+        redraw();
+      };
+    });
+  }
+}
+
+/* ============================================================
+   Controls
+============================================================ */
+function setSpinBtn() {
+  document.querySelector('button[data-spin="toggle"]').classList.toggle("active", autospin);
+}
+document.querySelectorAll('button[data-view]').forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll('button[data-view]').forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeProjection = btn.dataset.view === "globe" ? projection : flatProjection;
+    redraw();
+  });
+});
+document.querySelector('button[data-spin="toggle"]').addEventListener("click", () => {
+  autospin = !autospin;
+  setSpinBtn();
+});
+setSpinBtn();
+
+document.getElementById("refreshBtn").addEventListener("click", () => loadData(true));
+
+/* ============================================================
+   Boot: load world map + sheet data
+============================================================ */
+const WORLD_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+d3.json(WORLD_URL).then(world => {
+  worldFeatures = topojson.feature(world, world.objects.countries).features;
+  drawCountries();
+  redraw();
+});
+
+async function loadData(isRefresh) {
+  setStatus("loading", isRefresh ? "Refreshing…" : "Loading sheet…");
+  document.getElementById("lastUpdated").textContent = "Connecting to source…";
+  if (!DATA) renderSummary(); // skeletons
+
+  try {
+    console.info("[SLO] Fetching gviz JSONP for sheet", SHEET_ID, "gids:", GID, GID_CTH_AVG);
+    const [sloPayload, cthAvgPayload] = await Promise.all([
+      fetchSheetJSONP(GID),
+      fetchSheetJSONP(GID_CTH_AVG).catch(err => {
+        console.warn("[SLO] CTH averages fetch failed (non-fatal):", err);
+        return null;
+      })
+    ]);
+    console.info("[SLO] Main payload:", {
+      status: sloPayload.status, cols: sloPayload.table?.cols?.length, rows: sloPayload.table?.rows?.length
+    });
+    if (cthAvgPayload) console.info("[SLO] CTH averages payload:", {
+      status: cthAvgPayload.status, rows: cthAvgPayload.table?.rows?.length
+    });
+    const sourceData = extractDataFromJSON(sloPayload);
+    mergeCTHAverages(sourceData, cthAvgPayload);
+    if (sourceData.Global?.cth?.ytd == null) {
+      console.warn("[SLO] Source data:", sourceData);
+      throw new Error("Global CTH YTD missing — sheet structure may have changed");
+    }
+    const data = buildDisplayData(sourceData);
+    mergeCTHAveragesForDisplay(data, sourceData);
+    DATA = data;
+    console.info("[SLO] Display data:", data);
+    renderSummary();
+    drawPins();
+    redraw();
+    const now = new Date();
+    document.getElementById("lastUpdated").textContent =
+      `Live · Updated ${now.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})} · ${now.toLocaleDateString([], {month: "short", day: "numeric", year: "numeric"})}`;
+    setStatus("ok", "Live");
+    if (isRefresh) toast("Data refreshed");
+  } catch (err) {
+    console.error("[SLO] loadData failed:", err);
+    setStatus("error", "Connection failed");
+    document.getElementById("lastUpdated").textContent = "Source unavailable — " + err.message;
+    toast("Couldn't load sheet: " + err.message, true);
+  }
+}
+loadData(false);
+</script>
+</body>
+</html>
